@@ -355,7 +355,7 @@ end
 -- < Runtime >
 interface.Parent = game.CoreGui
 
---ui.msg("Welcome to Hydroxide", "forever better than racist dolphin's shit console")
+ui.msg("Welcome to Hydroxide", "forever better than racist dolphin's shit console")
 
 ui.addButton("debug", debug)
 ui.addButton("_G", getrenv()._G)
