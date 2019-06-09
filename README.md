@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Hydroxide-3D-vdW.png/220px-Hydroxide-3D-vdW.png"></a>
+  <a href="https://i.vgy.me/4W76vz.png"></a>
 </p>
 
 # Hydroxide
