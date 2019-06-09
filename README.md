@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://i.vgy.me/4W76vz.png"></a>
+  <img src="https://i.vgy.me/4W76vz.png">
 </p>
 
 # Hydroxide
