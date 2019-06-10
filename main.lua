@@ -449,7 +449,4 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
-ui.msg("Hey there!", "Check out Hydroxide on GitHub!\nhttps://github.com/0x90-NOP/Hydroxide")
-
-local x = ""
-ui.addButton("", {function()return x end})
+ui.msg("Thanks for using Hydroxide!", "Check it out on GitHub!\nhttps://github.com/0x90-NOP/Hydroxide")
