@@ -131,7 +131,7 @@ abs.isEmpty = function(table)
     return count == 0
 end
 
-abs.isObject = function(check)
+abs.isRoblox = function(check)
     return type(check) ~= typeof(check)
 end
 
@@ -444,7 +444,7 @@ ui.addButton = function(name, data, parent, options)
         end
     end
 
-    if getrawmetatable(data) and typeof(data) ~= "Instance" then -- Show metatables
+    if getrawmetatable(data) and not abs.isRoblox(data) then -- Show metatables
         if not button.Collapse.Visible then
             createCollapse(button)
         end
