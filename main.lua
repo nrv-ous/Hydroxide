@@ -333,12 +333,10 @@ ui.addButton = function(name, data, parent, options)
                         if not cache[i] then
                             local options = {}
                             if type(v) == 'function' then
-                                for i,v in next, currentScripts() do
-                                    if scripts[tostring(i)] then
-                                        options.icon = 3285608077
-                                    elseif modules[tostring(i)] then
-                                        options.icon = 3285656377
-                                    end
+                                if scripts[tostring(i)] then
+                                    options.icon = 3285608077
+                                elseif modules[tostring(i)] then
+                                    options.icon = 3285656377
                                 end
                             end
 
@@ -422,10 +420,3 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
-
-local scripts, modules = abs.getScripts()
-
-ui.addButton("Scripts", scripts, root, {showCollapse = true, icon = 3285607721})
-ui.addButton("Modules", modules, root, {showCollapse = true, icon = 3285696601})
-ui.addButton("shared", getrenv().shared)
-ui.addButton("_G", getrenv()._G)
