@@ -198,6 +198,8 @@ local welcome = body.Welcome.Scroll
 local changelogs = welcome.ChangeLogs
 
 changelogs.Text = ""
+changelogs.TextWrapped = true
+
 for i,v in next, loadstring(game:HttpGet("https://raw.githubusercontent.com/0x90-NOP/Hydroxide/master/change_logs.lua"))() do
     changelogs.Text = changelogs.Text .. "• " .. v .. '\n' 
 end
@@ -378,16 +380,16 @@ ui.addButton = function(name, data, parent, options)
                     local cache = {} -- Check for cloned data
                     for i,v in next, data do
                         if not cache[i] then
-                            local options = {}
-                            if type(v) == 'function' then
+                            local opts = {}
+                            if type(v) == 'function' and ({["rbxassetid://3285607721"] = true, ["rbxassetid://3285696601"] = true})[root.Icon.Image] then
                                 if scripts[tostring(i)] then
-                                    options.icon = 3285608077
+                                    opts.icon = 3285608077
                                 elseif modules[tostring(i)] then
-                                    options.icon = 3285656377
+                                    opts.icon = 3285656377
                                 end
                             end
 
-                            ui.addButton(tostring(i), v, button.Children, options)
+                            ui.addButton(tostring(i), v, button.Children, opts)
                             cache[i] = true
                         end
                     end
