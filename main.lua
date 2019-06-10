@@ -174,8 +174,8 @@ sidebar._G:Destroy()
 
 local information = body.Information
 local console = body.Console
-
 local misc = body.Miscellaneous.List
+
 for i,v in next, misc:GetChildren() do
     if not v:IsA("UIListLayout") then
         v.Label.MouseButton1Click:Connect(function()
@@ -192,6 +192,14 @@ for i,v in next, misc:GetChildren() do
             v.Label.Font = "SourceSans"
         end)
     end
+end
+
+local welcome = body.Welcome.Scroll
+local changelogs = welcome.ChangeLogs
+
+changelogs.Text = ""
+for i,v in next, loadstring(game:HttpGet("https://raw.githubusercontent.com/0x90-NOP/Hydroxide/master/change_logs.lua"))() do
+    changelogs.Text = changelogs.Text .. "• " .. v .. '\n' 
 end
 
 -- < Interface: Logo >
