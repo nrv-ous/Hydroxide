@@ -168,6 +168,7 @@ local buttonClone = sidebar._G:Clone()
 buttonClone.Icon.ImageTransparency = 0
 buttonClone.Label.Size = UDim2.new(1, -40, 0, 20)
 buttonClone.ClipsDescendants = true
+buttonClone.Label.Font = "SourceSans"
 
 sidebar._G:Destroy()
 
