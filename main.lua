@@ -346,6 +346,15 @@ ui.addButton = function(name, data, parent, options)
 
         element.Collapse.Visible = true
         element.Collapse.ClipsDescendants = false
+
+        element.Collapse.MouseEnter:Connect(function()
+            element.Collapse.ImageTransparency = 0
+        end)
+
+        element.Collapse.MouseLeave:Connect(function()
+            element.Collapse.ImageTransparency = 0.5
+        end)
+
         element.Collapse.MouseButton1Click:Connect(function()
             local e = element.Collapse
             local flag = e.ClipsDescendants
