@@ -235,8 +235,6 @@ ui.findRoot = function(obj, root)
 		return obj
 	end
 
-    --wait()
-
 	return ui.findRoot(obj.Parent, root)
 end
 
@@ -250,9 +248,7 @@ ui.getMostX = function(elements)
     return current
 end
 
-ui.addButton = function(name, data, parent, showCollapse)
-    --wait()
-    print(name) 
+ui.addButton = function(name, data, parent, options)
     local dataType = type(data)
 
     local button = buttonClone:Clone()
@@ -264,10 +260,14 @@ ui.addButton = function(name, data, parent, showCollapse)
         parent = sidebar
     end
 
+    if not options.icon then
+        options.icon = typeIcons[type(data)]
+    end
+
     button.Parent = parent
     button.Name = name
     button.Label.Text = name
-    button.Icon.Image = "rbxassetid://" .. typeIcons[type(data)]
+    button.Icon.Image = "rbxassetid://" .. options.icon
 
     local root = ui.findRoot(button, sidebar)
 
@@ -320,8 +320,8 @@ ui.addButton = function(name, data, parent, showCollapse)
                         end
                     end
 
-                    ui.addButton("Upvalues", filteredUpvalues, button.Children, true)
-                    ui.addButton("Environment", getfenv(data), button.Children, true)
+                    ui.addButton("Upvalues", filteredUpvalues, button.Children, {showCollapse = true}})
+                    ui.addButton("Environment", getfenv(data), button.Children, {showCollapse = true})
                     tableCache[data] = true
                 end
 
@@ -342,12 +342,12 @@ ui.addButton = function(name, data, parent, showCollapse)
         fitChildren(sidebar, "CanvasSize")
     end 
 
-    if showCollapse then
+    if options.showCollapse then
         createCollapse(button)
     end
 
     if (dataType == 'table' and not isEmpty(data)) or (dataType == 'function' and islclosure(data) and not isEmpty(getupvalues(data)))then -- Show tables
-        if not showCollapse then
+        if not options.showCollapse then
             createCollapse(button)
         end
     end
