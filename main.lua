@@ -235,7 +235,7 @@ ui.findRoot = function(obj, root)
 		return obj
 	end
 
-    wait()
+    --wait()
 
 	return ui.findRoot(obj.Parent, root)
 end
@@ -251,7 +251,7 @@ ui.getMostX = function(elements)
 end
 
 ui.addButton = function(name, data, parent, showCollapse)
-    wait()
+    --wait()
     print(name) 
     local dataType = type(data)
 
