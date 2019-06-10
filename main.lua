@@ -321,7 +321,7 @@ ui.addButton = function(name, data, parent, options)
             local e = element.Collapse
             local flag = e.ClipsDescendants
 
-            local scripts, modules = getScripts()
+            local scripts, modules = abs.getScripts()
 
             if flag then -- Collapsed
                 button.Size = button.Size - children.Size
@@ -422,3 +422,10 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
+
+local scripts, modules = abs.getScripts()
+
+ui.addButton("Scripts", scripts, root, {showCollapse = true, icon = 3285607721})
+ui.addButton("Modules", modules, root, {showCollapse = true, icon = 3285696601})
+ui.addButton("shared", getrenv().shared)
+ui.addButton("_G", getrenv()._G)
