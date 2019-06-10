@@ -121,7 +121,9 @@ do
 end
 
 -- < Abstractions >
-local isEmpty = function(table)
+getgenv().abs = {}
+
+abs.isEmpty = function(table)
     local count = 0
     for i,v in next, table do
         count = count + 1
@@ -129,8 +131,27 @@ local isEmpty = function(table)
     return count == 0
 end
 
-local isObject = function(check)
+abs.isObject = function(check)
     return type(check) ~= typeof(check)
+end
+
+abs.getScripts = function()
+    local scripts, modules, cache = {}, {}, {}
+    for i,v in next, getreg() do 
+        if type(v) == 'function' and getfenv(v).script then 
+            local scr = getfenv(v).script
+            if not cache[scr] and scr.Parent ~= nil then
+                if scr:IsA("ModuleScript") then 
+                    modules[scr.Name] = v
+                else 
+                    scripts[scr.Name] = v
+                end
+                cache[scr] = true
+            end
+        end
+    end
+
+    return scripts, modules
 end
 
 -- < Variables >
@@ -265,7 +286,7 @@ ui.addButton = function(name, data, parent, options)
     end
 
     if not options.icon then
-        options.icon = typeIcons[type(data)]
+        options.icon = typeIcons[dataType]
     end
 
     button.Parent = parent
@@ -300,6 +321,8 @@ ui.addButton = function(name, data, parent, options)
             local e = element.Collapse
             local flag = e.ClipsDescendants
 
+            local scripts, modules = getScripts()
+
             if flag then -- Collapsed
                 button.Size = button.Size - children.Size
                 children.Size = UDim2.new(0, 165, 0, 0)
@@ -308,13 +331,14 @@ ui.addButton = function(name, data, parent, options)
                     local cache = {} -- Check for cloned data
                     for i,v in next, data do
                         if not cache[i] then
-                            local options = {} 
-                            if type(v) == 'function' and getfenv(v).script then
-                                local scr = getfenv(v).script
-                                if scr:IsA("LocalScript") then
-                                    options.icon = 3285608077
-                                elseif scr:IsA("ModuleScript") then
-                                    options.icon = 3285656377
+                            local options = {}
+                            if type(v) == 'function' then
+                                for i,v in next, currentScripts() do
+                                    if scripts[tostring(i)] then
+                                        options.icon = 3285608077
+                                    elseif modules[tostring(i)] then
+                                        options.icon = 3285656377
+                                    end
                                 end
                             end
 
@@ -325,16 +349,27 @@ ui.addButton = function(name, data, parent, options)
                     
                     tableCache[data] = true
                 elseif type(data) == "function" and not tableCache[data] then
-                    local filteredUpvalues = {}
+                    local filteredEnvironment, filteredUpvalues = {}, {}
 
                     for i,v in next, getupvalues(data) do
                         if not getrenv()[i] then
                             filteredUpvalues[i] = v
                         end
                     end
+                    
+                    for i,v in next, getfenv(data) do
+                        if i ~= "script" then
+                            filteredEnvironment[i] = v
+                        end
+                    end
 
-                    ui.addButton("Upvalues", filteredUpvalues, button.Children, {showCollapse = true})
-                    ui.addButton("Environment", getfenv(data), button.Children, {showCollapse = true})
+                    if not abs.isEmpty(filteredUpvalues) then
+                        ui.addButton("Upvalues", filteredUpvalues, button.Children, {showCollapse = true})
+                    end
+
+                    if not abs.isEmpty(filteredEnvironment) then
+                        ui.addButton("Environment", filteredEnvironment, button.Children, {showCollapse = true})
+                    end
                     tableCache[data] = true
                 end
 
@@ -359,9 +394,18 @@ ui.addButton = function(name, data, parent, options)
         createCollapse(button)
     end
 
-    if (dataType == 'table' and not isEmpty(data)) or (dataType == 'function' and islclosure(data) and not isEmpty(getupvalues(data)))then -- Show tables
+    if ( dataType == 'table' and not abs.isEmpty(data) ) or ( dataType == 'function' and islclosure(data) and (not abs.isEmpty(getfenv(data)) or not abs.isEmpty(getupvalues(data))) ) then -- Show tables
+        local increment = 0
+        if type(data) == 'function' then
+            for i,v in next, getfenv(data) do
+                increment = increment + 1
+            end
+        end
+
         if not options.showCollapse then
-            createCollapse(button)
+            if (type(data) == 'function' and getfenv(data).script and increment > 1) or type(data) ~= "function" then
+                createCollapse(button)
+            end
         end
     end
 
