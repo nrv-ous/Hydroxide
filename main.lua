@@ -135,6 +135,7 @@ end
 
 -- < Variables >
 getgenv().ui = {}
+local tableCache = {} 
 local interface = game:GetObjects("rbxassetid://3223506759")[1]
 local drag = interface.Drag
 local body = drag.Body
@@ -234,6 +235,8 @@ ui.findRoot = function(obj, root)
 		return obj
 	end
 
+    wait()
+
 	return ui.findRoot(obj.Parent, root)
 end
 
@@ -248,6 +251,8 @@ ui.getMostX = function(elements)
 end
 
 ui.addButton = function(name, data, parent, showCollapse)
+    wait()
+    print(name) 
     local dataType = type(data)
 
     local button = buttonClone:Clone()
@@ -270,6 +275,7 @@ ui.addButton = function(name, data, parent, showCollapse)
         children = Instance.new("Frame", button)
         local format = Instance.new("UIListLayout", children)
         local fitChildren = function(element, size)
+            element[size] = UDim2.new(0, 165, 0, 0)
             for i,v in next, element:GetChildren() do
                 if not v:IsA("UIListLayout") then
                     element[size] = element[size] + UDim2.new(0, 0, 0, v.Size.Y.Offset)
@@ -289,22 +295,44 @@ ui.addButton = function(name, data, parent, showCollapse)
         element.Collapse.MouseButton1Click:Connect(function()
             local e = element.Collapse
             local flag = e.ClipsDescendants
-            e.Image = "rbxassetid://" .. collapseIcon[tostring(flag)]
 
-            if flag then
+            if flag then -- Collapsed
                 button.Size = button.Size - children.Size
                 children.Size = UDim2.new(0, 165, 0, 0)
-                --root.Size = root.Size - UDim2.new(0, 0, 0, button.Size.Y.Offset - 20) -- Collapse
-            else
+                --root.Size = 
+            else -- Opened
+                if type(data) == "table" and not tableCache[data] then -- this entire conditional block is to create instances once the client opens a path
+                    local cache = {} -- Check for cloned data
+                    for i,v in next, data do
+                        if not cache[i] then 
+                            ui.addButton(tostring(i), v, button.Children)
+                            cache[i] = true
+                        end
+                    end
+
+                    tableCache[data] = true
+                elseif type(data) == "function" and not tableCache[data] then
+                    local filteredUpvalues = {}
+
+                    for i,v in next, getupvalues(data) do
+                        if not getrenv()[i] then
+                            filteredUpvalues[i] = v
+                        end
+                    end
+
+                    ui.addButton("Upvalues", filteredUpvalues, button.Children, true)
+                    ui.addButton("Environment", getfenv(data), button.Children, true)
+                    tableCache[data] = true
+                end
+
                 fitChildren(children, "Size")
                 button.Size = button.Size + children.Size
-                --root.Size = root.Size + UDim2.new(0, 0, 0, button.Size.Y.Offset) -- Open 
             end
 
-            --root.Size = root.Size + UDim2.new(0, 0, 0, button.Size.Y.Offset)
-            
             sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
             fitChildren(sidebar, "CanvasSize")
+
+            e.Image = "rbxassetid://" .. collapseIcon[tostring(flag)]
 
             element.ClipsDescendants = flag
             e.ClipsDescendants = not flag
@@ -318,30 +346,13 @@ ui.addButton = function(name, data, parent, showCollapse)
         createCollapse(button)
     end
 
-    if dataType == 'table' and not isEmpty(data) then
+    if (dataType == 'table' and not isEmpty(data)) or (dataType == 'function' and islclosure(data) and not isEmpty(getupvalues(data)))then -- Show tables
         if not showCollapse then
             createCollapse(button)
         end
-        
-        local cache = {}
-        for i,v in next, data do
-            if not cache[v] then
-                ui.addButton(i, v, button.Children)
-                cache[v] = true
-            end
-        end
-    elseif dataType == 'function' and islclosure(data) and not isEmpty(getupvalues(data)) then
-        if not showCollapse then
-            createCollapse(button)
-        end
-
-        --[[local upvalues = ]]ui.addButton("Upvalues", getupvalues(data), button.Children, true)
-        --[[for i,v in next, getupvalues(data) do
-            ui.addButton(i, v, upvalues.Children)
-        end]]
     end
 
-    if getrawmetatable(data) and not isObject(data) then
+    if getrawmetatable(data) and type(data) == 'table' then -- Show metatables
         if not button.Collapse.Visible then
             createCollapse(button)
         end
@@ -354,8 +365,6 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
-
-ui.msg("Welcome to Hydroxide", "forever better than racist dolphin's shit console")
 
 ui.addButton("debug", debug)
 ui.addButton("_G", getrenv()._G)
