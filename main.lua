@@ -204,15 +204,11 @@ for i,v in next, loadstring(game:HttpGet("https://raw.githubusercontent.com/0x90
     changelogs.Text = changelogs.Text .. "• " .. v .. '\n' 
 end
 
--- < Interface: Logo >
-drag.Logo.Image = "rbxassetid://3270632025"
-
 -- < Interface: Message Box >
 do
     local messageBox = interface.MessageBox
     messageBox.Button.MouseButton1Click:Connect(function()
         messageBox.Visible = false
-
         border.Visible = true
     end)
 
@@ -222,7 +218,6 @@ do
             messageBox.Visible = true
             messageBox.Title.Text = title
             messageBox.Content.Text = message
-            
             border.Visible = false
         end}) 
 end
@@ -292,7 +287,7 @@ end
 ui.getMostX = function(elements)
     local current = 0
     for i,v in next, elements do
-        if not v:IsA("UIListLayout") and current < v.Position.X.Offset then
+        if v:IsA("TextButton") and current < v.Position.X.Offset then
             current = v
         end
     end
@@ -305,10 +300,8 @@ ui.addButton = function(name, data, parent, options)
     end
 
     local dataType = type(data)
-
     local button = buttonClone:Clone()
     local collapse = button.Collapse
-
     local children 
 
     if not parent then
@@ -323,18 +316,16 @@ ui.addButton = function(name, data, parent, options)
     button.Name = name
     button.Label.Text = name
     button.Icon.Image = "rbxassetid://" .. options.icon
-
-    local root = ui.findRoot(button, sidebar)
-
     button.Label.MouseEnter:Connect(function()
         button.Label.TextColor3 = Color3.fromRGB(240, 240, 240)
         button.Label.Font = "SourceSansSemibold"
     end)
-
     button.Label.MouseLeave:Connect(function()
         button.Label.TextColor3 = Color3.fromRGB(200, 200, 200)
         button.Label.Font = "SourceSans"
     end)
+
+    local root = ui.findRoot(button, sidebar)
 
     local createCollapse = function(element)
         children = Instance.new("Frame", button)
@@ -357,15 +348,12 @@ ui.addButton = function(name, data, parent, options)
 
         element.Collapse.Visible = true
         element.Collapse.ClipsDescendants = false
-
         element.Collapse.MouseEnter:Connect(function()
             element.Collapse.ImageTransparency = 0
         end)
-
         element.Collapse.MouseLeave:Connect(function()
             element.Collapse.ImageTransparency = 0.5
         end)
-
         element.Collapse.MouseButton1Click:Connect(function()
             local e = element.Collapse
             local flag = e.ClipsDescendants
@@ -456,7 +444,7 @@ ui.addButton = function(name, data, parent, options)
         end
     end
 
-    if getrawmetatable(data) and type(data) == 'table' then -- Show metatables
+    if getrawmetatable(data) and typeof(data) ~= "Instance" then -- Show metatables
         if not button.Collapse.Visible then
             createCollapse(button)
         end
