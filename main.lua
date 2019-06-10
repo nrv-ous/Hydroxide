@@ -365,6 +365,3 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
-
-ui.addButton("debug", debug)
-ui.addButton("_G", getrenv()._G)
