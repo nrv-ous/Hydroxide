@@ -333,7 +333,7 @@ ui.addButton = function(name, data, parent, options)
                         end
                     end
 
-                    ui.addButton("Upvalues", getupvalues(data), button.Children, {showCollapse = true})
+                    ui.addButton("Upvalues", filteredUpvalues, button.Children, {showCollapse = true})
                     ui.addButton("Environment", getfenv(data), button.Children, {showCollapse = true})
                     tableCache[data] = true
                 end
