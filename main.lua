@@ -1,16 +1,16 @@
 --[[ <
                                                                                                                                                                
-                                   **.     .*.                   ,&/.                              .(*         *%/                                             
-                                   &&/    ./&/                   *&/.                                          *&/                                             
-                                   &&/    .(&/ *#(    ./#. .*(%%//&/. .#/*%%*  .*#%%#,   (/.   (#. .#/   .*%%(/(&/   .*#%#(*                                   
-                                   &@%#####&@/  ,#%* .&%* *@(.   *&/. .@%,   ,@#,    %@#  /&@&&,   ,&(  *&(    *&/ .(&/,,,*#%,                                 
-                                   &&/    .(&/   .@%,(%*  /&/.   *&/. .,     ,@(.    #@#  ,#@@&    ,&(  \&/    *&/ .(&/,,,,,.                                  
-                                   ##*     *#*    ./@#     ,/#%%*,#*  .#(.     ,(%%%#.   #*    #%. .#/   ,(%%(**#*   ./%%%%#,                                  
+                                   **.     .*.                    *%\                              (*)         *%\                                             
+                                   &&/    ./&/                    *&|                    .       .             *&|                                             
+                                   &&/    .(&/ *#(    ./#.  .*%%(/(&| .#/*%%*  .*#%%#,   (/.   (#. .#/   .*%%(/(&|   .*#%#(\                                   
+                                   &@%#####&@/  ,#%* .&%*  *&(    *&| .@%,   ,@#,    %@#  /&@&&,   ,&(  *&(    *&|  (&/,,,*#%                                 
+                                   &&/    .(&/   .@%,(%*   \&/    *&| .,     ,@(.    #@#  ,#@@&    ,&(  \&/    *&|  (&/,,,,,.                                  
+                                   ##*     *#*    ./@#      \(%%(**#/ .#(.     ,(%%%#.  .#*    #%. .#/   \(%%(**#/   \%%%%%#,                                  
                                                   ,%#,                                                                                                         
                                                   (&*                                                                                                           
                                                                                                                                                                
                                                                                                                                                                
-                                                                                                            ..,,,,,,,***********,,.                            
+                                                                                                             ..,,,,,,,***********,,.                            
                                                                                                       ...,,,,,,,,,,,,,,,,,,,,**********,.                      
                                                                                                    .,,,,,,,,,,,,,,,,,,,,,,,,,,,,,**********,                   
                                                                                                ,,,,,......................,,,,,,,,,,,,**********,              
@@ -86,7 +86,7 @@ Hydroxide :: nerve
 
 -- < Delete Clones >
 if ui and game.CoreGui:FindFirstChild("Hydroxide") then
-    ui = nil
+    getgenv().ui = nil
     game.CoreGui.Hydroxide:Destroy()
 end
 
@@ -173,6 +173,25 @@ sidebar._G:Destroy()
 
 local information = body.Information
 local console = body.Console
+
+local misc = body.Miscellaneous.List
+for i,v in next, misc:GetChildren() do
+    if not v:IsA("UIListLayout") then
+        v.Label.MouseButton1Click:Connect(function()
+            ui.msg("Woops!", "\"" .. v.Label.Text .. "\" is not available yet!")
+        end)
+
+        v.Label.MouseEnter:Connect(function()
+            v.Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+            v.Label.Font = "SourceSansSemibold"
+        end)
+
+        v.Label.MouseLeave:Connect(function()
+            v.Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+            v.Label.Font = "SourceSans"
+        end)
+    end
+end
 
 -- < Interface: Logo >
 drag.Logo.Image = "rbxassetid://3270632025"
@@ -296,6 +315,16 @@ ui.addButton = function(name, data, parent, options)
 
     local root = ui.findRoot(button, sidebar)
 
+    button.Label.MouseEnter:Connect(function()
+        button.Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+        button.Label.Font = "SourceSansSemibold"
+    end)
+
+    button.Label.MouseLeave:Connect(function()
+        button.Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+        button.Label.Font = "SourceSans"
+    end)
+
     local createCollapse = function(element)
         children = Instance.new("Frame", button)
         local format = Instance.new("UIListLayout", children)
@@ -392,7 +421,7 @@ ui.addButton = function(name, data, parent, options)
         createCollapse(button)
     end
 
-    if ( dataType == 'table' and not abs.isEmpty(data) ) or ( dataType == 'function' and islclosure(data) and (not abs.isEmpty(getfenv(data)) or not abs.isEmpty(getupvalues(data))) ) then -- Show tables
+    if ( dataType == 'table' and not abs.isEmpty(data) ) or ( dataType == 'function' and islclosure(data) and not abs.isEmpty(getupvalues(data)) ) then -- Show tables
         local increment = 0
         if type(data) == 'function' then
             for i,v in next, getfenv(data) do
@@ -401,7 +430,7 @@ ui.addButton = function(name, data, parent, options)
         end
 
         if not options.showCollapse then
-            if (type(data) == 'function' and getfenv(data).script and increment > 1) or type(data) ~= "function" then
+            if ( type(data) == "function" and ( (getfenv(data).script and increment > 1) or not abs.isEmpty(getupvalues(data)) ) ) or type(data ~= "function") then
                 createCollapse(button)
             end
         end
@@ -420,3 +449,7 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
+ui.msg("Hey there!", "Check out Hydroxide on GitHub!\nhttps://github.com/0x90-NOP/Hydroxide")
+
+local x = ""
+ui.addButton("", {function()return x end})
