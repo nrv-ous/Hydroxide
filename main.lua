@@ -213,12 +213,12 @@ end
 
 -- < Interface: Sidebar>
 local typeIcons = {
-    string = 3270578699,
-    number = 3270578699,
-    boolean = 3270578699,
-    table = 3270579576,
-    userdata = 3270579823,
-    ['function'] = 3270578480
+    string = 3285671510,
+    number = 3285671510,
+    boolean = 3285671510,
+    table = 3285651068,
+    userdata = 3285664726,
+    ['function'] = 3285661880
 }
 
 local collapseIcon = {
@@ -303,17 +303,26 @@ ui.addButton = function(name, data, parent, options)
             if flag then -- Collapsed
                 button.Size = button.Size - children.Size
                 children.Size = UDim2.new(0, 165, 0, 0)
-                --root.Size = 
             else -- Opened
                 if type(data) == "table" and not tableCache[data] then -- this entire conditional block is to create instances once the client opens a path
                     local cache = {} -- Check for cloned data
                     for i,v in next, data do
-                        if not cache[i] then 
-                            ui.addButton(tostring(i), v, button.Children)
+                        if not cache[i] then
+                            local options = {} 
+                            if type(v) == 'function' and getfenv(v).script then
+                                local scr = getfenv(v).script
+                                if scr:IsA("LocalScript") then
+                                    options.icon = 3285608077
+                                elseif scr:IsA("ModuleScript") then
+                                    options.icon = 3285656377
+                                end
+                            end
+
+                            ui.addButton(tostring(i), v, button.Children, options)
                             cache[i] = true
                         end
                     end
-
+                    
                     tableCache[data] = true
                 elseif type(data) == "function" and not tableCache[data] then
                     local filteredUpvalues = {}
@@ -324,7 +333,7 @@ ui.addButton = function(name, data, parent, options)
                         end
                     end
 
-                    ui.addButton("Upvalues", filteredUpvalues, button.Children, {showCollapse = true})
+                    ui.addButton("Upvalues", getupvalues(data), button.Children, {showCollapse = true})
                     ui.addButton("Environment", getfenv(data), button.Children, {showCollapse = true})
                     tableCache[data] = true
                 end
