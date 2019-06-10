@@ -99,18 +99,18 @@ do
 
     local verified = true
     for i,v in next, {
-        getrawmetatable = getrawmetatable or debug.getmetatable,
-        setrawmetatable = setrawmetatable or debug.setmetatable,
-        getupvalues = debug.getupvalues or getupvalues or getupvals,
-        getupvalue = debug.getupvalue or getupvalue or getupval,
-        setupvalue = debug.setupvalue or setupvalue or setupval,
-        islclosure = islclosure,
+        getrawmetatable = getrawmetatable or debug.getmetatable or false,
+        setrawmetatable = setrawmetatable or debug.setmetatable or false,
+        getupvalues = debug.getupvalues or getupvalues or getupvals or false,
+        getupvalue = debug.getupvalue or getupvalue or getupval or false,
+        setupvalue = debug.setupvalue or setupvalue or setupval or false,
+        islclosure = islclosure or false,
     } do
         if v then
             getgenv()[i] = v
         else
             verified = false
-            print("<OH-> : Your exploit dose not have " .. i)
+            print("<OH-> : Your exploit does not have " .. i)
         end
     end
 
