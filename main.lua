@@ -249,6 +249,10 @@ ui.getMostX = function(elements)
 end
 
 ui.addButton = function(name, data, parent, options)
+    if not options then
+        options = {}
+    end
+
     local dataType = type(data)
 
     local button = buttonClone:Clone()
