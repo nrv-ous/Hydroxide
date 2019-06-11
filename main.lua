@@ -212,14 +212,12 @@ do
         border.Visible = true
     end)
 
-    ui.msg = false
-    setrawmetatable(ui.msg, {
-        __call = function(t, title, message)
-            messageBox.Visible = true
-            messageBox.Title.Text = title
-            messageBox.Content.Text = message
-            border.Visible = false
-        end}) 
+    ui.msg = function(title, message)
+        messageBox.Visible = true
+        messageBox.Title.Text = title
+        messageBox.Content.Text = message
+        border.Visible = false
+    end
 end
 
 -- < Interface: Drag >
@@ -255,6 +253,16 @@ do -- creds to @[ Tiffblocks ]
             drag.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
+end
+
+-- < Interface: Information >
+ui.showInfo = function(name, data, extra)
+    local allExtra = {
+        isUpvalue = false,
+        isMetatable = false,
+    }
+
+
 end
 
 -- < Interface: Sidebar>
@@ -324,6 +332,9 @@ ui.addButton = function(name, data, parent, options)
         button.Label.TextColor3 = Color3.fromRGB(200, 200, 200)
         button.Label.Font = "SourceSans"
     end)
+    button.Label.MouseButton1Click:Connect(function()
+        print(data)
+    end)
 
     local root = ui.findRoot(button, sidebar)
 
@@ -361,7 +372,7 @@ ui.addButton = function(name, data, parent, options)
             local scripts, modules = abs.getScripts()
 
             if flag then -- Collapsed
-                button.Size = button.Size - children.Size
+                button.Size = button.Size - UDim2.new(0, 0, 0, children.Size.Y.Offset)
                 children.Size = UDim2.new(0, 165, 0, 0)
             else -- Opened
                 if type(data) == "table" and not tableCache[data] then -- this entire conditional block is to create instances once the client opens a path
@@ -369,15 +380,24 @@ ui.addButton = function(name, data, parent, options)
                     for i,v in next, data do
                         if not cache[i] then
                             local opts = {}
+                            local module
                             if type(v) == 'function' and ({["rbxassetid://3285607721"] = true, ["rbxassetid://3285696601"] = true})[root.Icon.Image] then
                                 if scripts[tostring(i)] then
                                     opts.icon = 3285608077
                                 elseif modules[tostring(i)] then
                                     opts.icon = 3285656377
+                                    module = ui.addButton("Return Type", require(getfenv(v).script), button.Children)
                                 end
                             end
 
-                            ui.addButton(tostring(i), v, button.Children, opts)
+                            local datum = ui.addButton(tostring(i), v, button.Children, opts)
+                            
+                            print(datum.Children)
+
+                            if module then
+                                --module.Parent = datum.Children
+                            end
+
                             cache[i] = true
                         end
                     end
@@ -409,7 +429,7 @@ ui.addButton = function(name, data, parent, options)
                 end
 
                 fitChildren(children, "Size")
-                button.Size = button.Size + children.Size
+                button.Size = button.Size + UDim2.new(0, 0, 0, children.Size.Y.Offset)
             end
 
             sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -449,7 +469,7 @@ ui.addButton = function(name, data, parent, options)
             createCollapse(button)
         end
 
-        local metatable = ui.addButton("Metatable", getrawmetatable(data), button.Children)
+        ui.addButton("Metatable", getrawmetatable(data), button.Children)
     end
 
     return button
@@ -458,3 +478,4 @@ end
 -- < Runtime >
 interface.Parent = game.CoreGui
 ui.msg("Thanks for using Hydroxide!", "Check it out on GitHub!\nhttps://github.com/0x90-NOP/Hydroxide")
+
