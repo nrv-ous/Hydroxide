@@ -370,10 +370,27 @@ ui.addButton = function(name, data, parent, options)
             local flag = e.ClipsDescendants
 
             local scripts, modules = abs.getScripts()
+            local btn = {}
+            btn.resizeTree = function(button, y)
+                if button.Parent == sidebar then
+                    return
+                end
+                button.Parent.Size = button.Parent.Size + UDim2.new(0, 0, 0, y)
+                return btn.resizeTree(button.Parent, y)
+            end
 
             if flag then -- Collapsed
                 button.Size = button.Size - UDim2.new(0, 0, 0, children.Size.Y.Offset)
                 children.Size = UDim2.new(0, 165, 0, 0)
+
+                local y = 0 
+                for i,v in next, button.Children:GetChildren() do
+                    if not v:IsA("UIListLayout") then
+                        y = y - v.Size.Y.Offset
+                    end
+                end
+
+                btn.resizeTree(button, y)
             else -- Opened
                 if type(data) == "table" and not tableCache[data] then -- this entire conditional block is to create instances once the client opens a path
                     local cache = {} -- Check for cloned data
@@ -391,11 +408,11 @@ ui.addButton = function(name, data, parent, options)
                             end
 
                             local datum = ui.addButton(tostring(i), v, button.Children, opts)
-                            
-                            print(datum.Children)
-
-                            if module then
-                                --module.Parent = datum.Children
+                            if datum and module and datum:FindFirstChild("Children") then
+                                module.Parent = datum.Children 
+                            elseif module and not datum:FindFirstChild("Children") then
+                                datum:Destroy()
+                                module:Destroy()
                             end
 
                             cache[i] = true
@@ -430,6 +447,15 @@ ui.addButton = function(name, data, parent, options)
 
                 fitChildren(children, "Size")
                 button.Size = button.Size + UDim2.new(0, 0, 0, children.Size.Y.Offset)
+
+                local y = 0 
+                for i,v in next, button.Children:GetChildren() do
+                    if not v:IsA("UIListLayout") then
+                        y = y + v.Size.Y.Offset
+                    end
+                end
+
+                btn.resizeTree(button, y)
             end
 
             sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -478,4 +504,3 @@ end
 -- < Runtime >
 interface.Parent = game.CoreGui
 ui.msg("Thanks for using Hydroxide!", "Check it out on GitHub!\nhttps://github.com/0x90-NOP/Hydroxide")
-
