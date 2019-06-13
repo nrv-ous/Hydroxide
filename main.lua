@@ -292,16 +292,6 @@ ui.findRoot = function(obj, root)
 	return ui.findRoot(obj.Parent, root)
 end
 
-ui.getMostX = function(elements)
-    local current = 0
-    for i,v in next, elements do
-        if v:IsA("TextButton") and current < v.Position.X.Offset then
-            current = v
-        end
-    end
-    return current
-end
-
 ui.addButton = function(name, data, parent, options)
     if not options then
         options = {}
@@ -350,6 +340,15 @@ ui.addButton = function(name, data, parent, options)
             end
         end
 
+        local mostX = 0
+        local function scanLargestX()
+            for i,v in next, sidebar:GetDescendants() do
+                if v.Name == "Label" and v.Visible and (v.AbsolutePosition.X + v.TextBounds.X) > mostX then
+                    mostX = v.AbsolutePosition.X + v.TextBounds.X
+                end
+            end
+        end
+
         children.BackgroundTransparency = 1
         children.Position = UDim2.new(0, 10, 0, 20) -- To put it directly under the button, left shift for clearance
         children.Size = UDim2.new(0, 165, 0, 0)
@@ -391,6 +390,14 @@ ui.addButton = function(name, data, parent, options)
                 end
 
                 btn.resizeTree(button, y)
+
+                for i,v in next, button.Children:GetDescendants() do
+                    if v.Name == "Label" then
+                        v.Visible = false
+                    end
+                end
+
+                scanLargestX()
             else -- Opened
                 if type(data) == "table" and not tableCache[data] then -- this entire conditional block is to create instances once the client opens a path
                     local cache = {} -- Check for cloned data
@@ -452,24 +459,25 @@ ui.addButton = function(name, data, parent, options)
                 for i,v in next, button.Children:GetChildren() do
                     if not v:IsA("UIListLayout") then
                         y = y + v.Size.Y.Offset
+                        v.Visible = true
                     end
                 end
 
                 btn.resizeTree(button, y)
+
+                for i,v in next, button.Children:GetDescendants() do
+                    if v.Name == "Label" and v.Parent.Collapse.Image == "rbxassetid://" .. collapseIcon["true"] and v.Parent ~= button.Children then
+                        v.Visible = true
+                    end
+                end
+
+                scanLargestX()
             end
 
             sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
             fitChildren(sidebar, "CanvasSize")
 
-            local mostX = 0
-            for i,v in next, sidebar:GetDescendants() do 
-                if v:IsA("TextButton") then 
-                    if v.AbsolutePosition.X + v.TextBounds.X > mostX then 
-                        mostX = v.AbsolutePosition.X + v.TextBounds.X
-                    end
-                end
-            end
-            
+            -- sizex
             sidebar.CanvasSize = UDim2.new(0, (mostX - sidebar.AbsolutePosition.X) , 0, sidebar.CanvasSize.Y.Offset)
 
             e.Image = "rbxassetid://" .. collapseIcon[tostring(flag)]
