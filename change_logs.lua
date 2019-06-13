@@ -1,4 +1,4 @@
 return {
-  [[Added "Miscellaneous" section]],
-  "Added highlighting to explorer & miscellaneous"
+  "Fixed sizing issues with the explorer",
+  "Added temporary solution to canvas-x size problem"
 }
