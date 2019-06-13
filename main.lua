@@ -461,6 +461,17 @@ ui.addButton = function(name, data, parent, options)
             sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
             fitChildren(sidebar, "CanvasSize")
 
+            local mostX = 0
+            for i,v in next, sidebar:GetDescendants() do 
+                if v:IsA("TextButton") then 
+                    if v.AbsolutePosition.X + v.TextBounds.X > mostX then 
+                        mostX = v.AbsolutePosition.X + v.TextBounds.X
+                    end
+                end
+            end
+            
+            sidebar.CanvasSize = UDim2.new(0, (mostX - sidebar.AbsolutePosition.X) , 0, sidebar.CanvasSize.Y.Offset)
+
             e.Image = "rbxassetid://" .. collapseIcon[tostring(flag)]
 
             element.ClipsDescendants = flag
