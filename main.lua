@@ -478,8 +478,9 @@ ui.addButton = function(name, data, parent, options)
             fitChildren(sidebar, "CanvasSize")
 
             -- sizex
+            local oldPos = sidebar.CanvasPosition
             sidebar.CanvasSize = UDim2.new(0, (mostX - sidebar.AbsolutePosition.X) , 0, sidebar.CanvasSize.Y.Offset)
-
+            sidebar.CanvasPosition = oldPos
             e.Image = "rbxassetid://" .. collapseIcon[tostring(flag)]
 
             element.ClipsDescendants = flag
