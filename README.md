@@ -15,4 +15,5 @@ local scripts, modules = abs.getScripts()
 ui.addButton("Scripts", scripts, root, {icon = 3285607721})
 ui.addButton("Modules", modules, root, {icon = 3285696601})
 ui.addButton("_G", getrenv()._G)
-ui.addButton("shared", getrenv().shared)```
+ui.addButton("shared", getrenv().shared)
+```
