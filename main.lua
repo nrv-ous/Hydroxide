@@ -347,7 +347,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
         local mostX = 0
         local scanLargestX = function() -- Scans the root directory's descendants for the farthest indented button
             for i, d in next, sidebar:GetDescendants() do
-                if d.Name == "Label" and d.Visible and (d.AbsolutePosition.X + d.TextBounds.X) > mostX then
+                if d.Name == "Label" and d.ClipsDescendants and (d.AbsolutePosition.X + d.TextBounds.X) > mostX then
                     mostX = d.AbsolutePosition.X + d.TextBounds.X
                 end
             end
@@ -400,7 +400,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
 
                 for i, d in next, button.Children:GetDescendants() do -- Since we're collapsing this entire thing, we should probably make everything inside of it invisible
                     if d.Name == "Label" then
-                        d.Visible = false
+                        d.ClipsDescendants = false
                     end
                 end
 
@@ -487,7 +487,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
 
                 for i, d in next, button.Children:GetDescendants() do
                     if d.Name == "Label" and not d.Parent.Collapse.ClipsDescendants and d.Parent ~= button.Children then
-                        d.Visible = true
+                        d.ClipsDescendants = true
                     end
                 end
 
