@@ -459,15 +459,15 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
                         end
                     end
 
-                    if abs.tableSize(filteredUpvs) ~= 0 then
+                    if abs.tableSize(filteredUpvs) ~= 0 and not button.Children:FindFirstChild("Upvalues") then
                         ui.addButton("Upvalues", filteredUpvs, button.Children, {showCollapse = true, upvalueTable = true})
                     end
 
-                    if abs.tableSize(filteredEnv) ~= 0 then
+                    if abs.tableSize(filteredEnv) ~= 0 and not button.Children:FindFirstChild("Environment") then
                         ui.addButton("Environment", filteredEnv, button.Children, {showCollapse = true, envTable = true})
                     end
 
-                    if abs.tableSize(constants) ~= 0 then
+                    if abs.tableSize(constants) ~= 0 and not button.Children:FindFirstChild("Constants") then
                         ui.addButton("Constants", constants, button.Children, {showCollapse = true, constsTable = true})
                     end
                 end
