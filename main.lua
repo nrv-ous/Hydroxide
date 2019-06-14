@@ -120,7 +120,8 @@ do -- Checks if the exploit has the required functions
 
     if not verified then
         warn("<OH-> : Your exploit must have the functions listed above in order to use Hydroxide.")
-    end
+		return
+	end
 end
 
 -- < Variables >
