@@ -546,4 +546,4 @@ end
 
 -- < Runtime >
 interface.Parent = game.CoreGui
-ui.msg("Thanks for using Hydroxide!", "Check it out on GitHub!\nhttps://github.com/0x90-NOP/Hydroxide")
+ui.msg("Thanks for using Hydroxide!", "Please consider the fact that this is not a finished project; there WILL be bugs!")
