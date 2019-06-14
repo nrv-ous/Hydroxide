@@ -104,6 +104,8 @@ do -- Checks if the exploit has the required functions
         getupvalues = debug.getupvalues or getupvalues or getupvals or false,
         getupvalue = debug.getupvalue or getupvalue or getupval or false,
         setupvalue = debug.setupvalue or setupvalue or setupval or false,
+        getconstants = debug.getconstants or getconstants or false,
+        setconstant = debug.setconstant or setconstant or false,
         islclosure = islclosure or false,
     }
 
@@ -218,7 +220,7 @@ abs.getScripts = function() -- Returns all scripts and modules which the client 
     for i, f in next, getreg() do
         if type(f) == "function" then
             local scr = getfenv(f).script
-            if (not scripts[scr] or not modules[scr]) and scr.Parent ~= nil then
+            if typeof(scr) == "Instance" and (not scripts[scr] or not modules[scr]) and scr.Parent ~= nil then
                 if scr:IsA("ModuleScript") then
                     modules[scr] = f
                 else
@@ -284,6 +286,10 @@ local collapseIcon = { -- Open/Collapse icons
 }
 
 ui.addButton = function(name, data, parent, options) -- Function to add new sidebar button
+    if data == nil then
+        return
+    end
+
     local dataType = type(data)
 
     local button = buttonClone:Clone()
@@ -439,6 +445,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
                     dataCache[data] = true
                 elseif type(data) == "function" then
                     local filteredEnv, filteredUpvs = {}, {}
+                    local constants = getconstants(data)
 
                     for i, u in next, getupvalues(data) do -- Remove all upvalues that are named any one of Roblox's globals
                         if not getrenv()[i] then
@@ -458,6 +465,10 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
 
                     if abs.tableSize(filteredEnv) ~= 0 then
                         ui.addButton("Environment", filteredEnv, button.Children, {showCollapse = true, envTable = true})
+                    end
+
+                    if abs.tableSize(constants) ~= 0 then
+                        ui.addButton("Constants", constants, button.Children, {showCollapse = true, constsTable = true})
                     end
                 end
 
@@ -490,7 +501,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
 
             local oldPosition = sidebar.CanvasPosition
             sidebar.CanvasSize = UDim2.new(0, (mostX - sidebar.AbsolutePosition.X), 0, sidebar.CanvasSize.Y.Offset)
-            sidebar.CanvasPosition = oldPosition
+            sidebar.CanvasPosition = oldPosition    
 
             collapse.Image = "rbxassetid://" .. collapseIcon[tostring(collapsed)]
 
