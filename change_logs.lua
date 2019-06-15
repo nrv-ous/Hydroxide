@@ -1,5 +1,5 @@
 return {
-  "Fixed sizing issues with the explorer",
-  "Added temporary solution to canvas-x size problem",
-  "Made function constants viewable"
+  "Made function constants viewable",
+  "You can now view data information!",
+  'Added "Search Upvalues" :))'
 }
