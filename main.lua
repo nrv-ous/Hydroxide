@@ -711,4 +711,6 @@ end)
 
 -- < Runtime >
 interface.Parent = game.CoreGui
-ui.msg("Thanks for using Hydroxide!", "Please consider the fact that this is not a finished project; there WILL be bugs!")
+
+local startMessage = loadstring(game:HttpGet("https://raw.githubusercontent.com/0x90-NOP/Hydroxide/master/startMessage.lua"))()
+ui.msg(unpack(startMessage))
