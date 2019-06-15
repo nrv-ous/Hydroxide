@@ -235,9 +235,16 @@ abs.tableSize = function(table) -- Returns the number of elements in a given tab
 end
 
 abs.getUpvalues = function()
+    local is_synapse_function = is_synapse_function
+    if not is_synapse_function then
+        is_synapse_function = function()
+            return false
+        end
+    end
+
     local upvalues = {}
     for i,v in next, getgc() do
-        if type(v) == "function" then
+        if type(v) == "function" and not is_synapse_function(v) then
             for k,x in next, getupvalues(v) do
                 if not upvalues[k] then
                     upvalues[k] = x
@@ -680,7 +687,6 @@ local createUpvalue = function(name, data)
     end)
 
     upvalue.Parent = upvalScroll
-    wait()
 end
 
 misc.SearchUpvalues.Label.MouseButton1Click:Connect(function()
