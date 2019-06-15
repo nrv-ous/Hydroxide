@@ -640,7 +640,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
     end
 
     -- Add collapse to metatables
-    if getrawmetatable(data) and abs.tableSize(data) ~= 0 and not abs.isRobloxType(data) then
+    if not abs.isRobloxType(data) and getrawmetatable(data) and abs.tableSize(data) ~= 0 then
         if not button.Collapse.Visible then
             addCollapse(button)
         end
