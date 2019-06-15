@@ -74,18 +74,18 @@ Hydroxide :: nerve
     "Hydroxide is a penetration testing tool, used to edge the security of Roblox games."
 
 << Features:
-    > Client Environment "Explorer"
+    > Data Explorer
     > Data Manipulation
     > Data Information
     > Code Generation
-    > Client Script Viewer
+    > Script Viewer
     > Remote Call "Spy"
 >>
 
 ]]-- >
 
 -- < Existence Check >
-if ui then -- Checks if an instances already exists
+if ui and game:GetService("CoreGui"):FindFirstChild("Hydroxide") then -- Checks if an instances already exists
     getgenv().ui = nil
     game:GetService("CoreGui").Hydroxide:Destroy()
 end
@@ -120,8 +120,19 @@ do -- Checks if the exploit has the required functions
 
     if not verified then
         warn("<OH-> : Your exploit must have the functions listed above in order to use Hydroxide.")
-		return
-	end
+    end
+end
+
+-- < lol? >
+for i,v in next, getreg() do
+    if type(v) == "function" and islclosure(v) then
+        local scr = getfenv(v).script
+        for k,x in next, getconstants(v) do
+            if x == "Hydroxide" and scr ~= script then
+                scr:Destroy()
+            end
+        end
+    end 
 end
 
 -- < Variables >
@@ -149,6 +160,7 @@ local interface = game:GetObjects("rbxassetid://3223506759")[1]
 
 local drag = interface.Drag
 local messageBox = interface.MessageBox
+local searchUpvalues = interface.SearchUpvalues
 
 local body = drag.Body
 local border = drag.BorderFrame
@@ -174,11 +186,16 @@ changelogs.TextWrapped = true
 changelogs.Text = ''
 
 for i,v in next, misc:GetChildren() do -- Miscellaneous section clicks
-    if v:IsA("Frame") then
+    local finished = {
+        SearchUpvalues = true
+    }
+    if v:IsA("Frame") and not finished[v.Name] then
         local label = v.Label
 
         label.MouseButton1Click:Connect(function()
-            ui.msg("Woops!", '"' .. label.Text .. "\" is not available yet!")
+            if not finished[v.Name] then
+                ui.msg("Woops!", '"' .. label.Text .. "\" is not available yet!")
+            end
         end)
 
         ui.addHighlight(label)
@@ -214,6 +231,20 @@ abs.tableSize = function(table) -- Returns the number of elements in a given tab
         size = size + 1
     end
     return size
+end
+
+abs.getUpvalues = function()
+    local upvalues = {}
+    for i,v in next, getgc() do
+        if type(v) == "function" then
+            for k,x in next, getupvalues(v) do
+                if not upvalues[k] then
+                    upvalues[k] = x
+                end
+            end
+        end
+    end
+    return upvalues
 end
 
 abs.getScripts = function() -- Returns all scripts and modules which the client has access to and are not parented to nil
@@ -267,12 +298,7 @@ do
 end
 
 -- < Interface : Information > 
-ui.showInfo = function(name, data, attr)
-
-end
-
--- < Interface : Sidebar > 
-local typeIcon = { -- All icons for sidebar buttons
+local typeIcon = { 
     string = 3285671510,
     number = 3285671510,
     boolean = 3285671510,
@@ -281,6 +307,68 @@ local typeIcon = { -- All icons for sidebar buttons
     ['function'] = 3285661880
 }
 
+local attrs = {
+    string = {
+        ViewValue = true
+    },
+    number = {
+        ViewValue = true
+    },
+    boolean = {
+        ViewValue = true
+    },
+    userdata = {
+        ViewValue = true
+    },
+    table = {
+        Elements = true,
+        ModifyElements = true
+    },
+    ["function"] = {
+        Upvalues = true,
+        Constants = true,
+        Overwrite = true,
+        ViewSource = true
+    }
+}
+
+local showInfo = function(name, data)
+    if not information.Visible then
+        welcome.Visible = false
+        information.Visible = true
+    end
+
+    local infoBody = information.Body
+    local icon = information:FindFirstChild("Name").Icon
+    local index = icon.Index
+
+    local dataType = type(data)
+    
+    icon.Image = "rbxassetid://" .. typeIcon[dataType]
+    index.Text = name
+    index.Size = UDim2.new(0, index.TextBounds.X, 0, 20)
+    icon.Position = UDim2.new(1, -(index.TextBounds.X + 24), 0, 4)
+
+    for i,v in next, infoBody:GetChildren() do
+        if attrs[dataType][v.Name] and not v:IsA("UIListLayout") then
+            v.Visible = true
+        elseif not v:IsA("UIListLayout") then
+            v.Visible = false
+        end
+    end
+
+    infoBody.Type.Visible = true
+    infoBody.Type.Text = "type: " .. dataType
+
+    if dataType == "function" then
+        infoBody.Upvalues.Text = "upvalues: " .. abs.tableSize(getupvalues(data))
+        infoBody.Constants.Text = "constants: " .. abs.tableSize(getconstants(data))
+    elseif dataType == "table" then
+        infoBody.Elements.Text = "elements: " .. abs.tableSize(data)
+    end
+end
+
+-- < Interface : Sidebar > 
 local collapseIcon = { -- Open/Collapse icons
 	["true"] = 3270754211,
 	["false"] = 3271004659
@@ -317,6 +405,9 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
     label.Text = name
     label.Size = UDim2.new(0, label.TextBounds.X + 10, 0, 20)
     ui.addHighlight(label) -- Add highlight to sidebar button
+    label.MouseButton1Click:Connect(function()
+        showInfo(name, data)
+    end)
 
     local fn = {}
     fn.findRoot = function(obj, parent) -- Travels up the root directory until it hits the given parent
@@ -543,6 +634,80 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
 
     return button
 end 
+
+-- < Search Upvalues >
+local currentUpvalues = {}
+local viewSearchUpvalues = false
+
+local upvalQuery = searchUpvalues.Query
+local upvalSearch = searchUpvalues.Search
+local upvalScroll = searchUpvalues.Upvalues.Scroll
+
+local upvalueClone = upvalScroll.Upvalue:Clone()
+upvalScroll.Upvalue:Destroy()
+
+local createUpvalue = function(name, data)
+    local upvalue = upvalueClone:Clone()
+    local label = upvalue.Label
+    
+    upvalue.Icon.Image = "rbxassetid://" .. typeIcon[type(data)]
+    label.Name = name
+    label.Text = name
+
+    label.MouseButton1Click:Connect(function()
+        searchUpvalues.Visible = false
+        border.Visible = true
+
+        viewSearchUpvalues = false
+
+        showInfo(name, data)
+    end)
+
+    upvalue.Parent = upvalScroll
+    wait()
+end
+
+misc.SearchUpvalues.Label.MouseButton1Click:Connect(function()
+    if not viewSearchUpvalues then
+        border.Visible = false
+        searchUpvalues.Visible = true
+    else
+        searchUpvalues.Visible = false
+        border.Visible = true
+    end
+    viewSearchUpvalues = not viewSearchUpvalues
+end)
+
+upvalScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+local scanUpvalues = function()
+    if upvalQuery.Text:len() == 0 then
+        ui.msg("", "Type at least one character!")
+        return
+    end
+
+    for i,v in next, upvalScroll:GetChildren() do
+        if not v:IsA("UIListLayout") then
+            v:Destroy()
+        end
+    end
+
+    upvalScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+    local text = upvalQuery.Text
+    for i,v in next, abs.getUpvalues() do
+        if text:lower():sub(1, text:len()) == tostring(i):lower():sub(1, text:len()) then -- holy god this is long
+            createUpvalue(tostring(i), v)
+            upvalScroll.CanvasSize = upvalScroll.CanvasSize + UDim2.new(0, 0, 0, 20)
+        end
+    end
+end
+
+upvalSearch.MouseButton1Click:Connect(scanUpvalues)
+upvalQuery.FocusLost:Connect(function(fromEnter)
+    if fromEnter then
+        scanUpvalues()
+    end
+end)
 
 -- < Runtime >
 interface.Parent = game.CoreGui
