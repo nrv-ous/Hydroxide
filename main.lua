@@ -202,7 +202,7 @@ for i,v in next, misc:GetChildren() do -- Miscellaneous section clicks
     end
 end
 
-local changes = loadstring(game:HttpGet("https://raw.githubusercontent.com/0x90-NOP/Hydroxide/master/change_logs.lua"))()
+local changes = loadstring(game:HttpGet("https://raw.githubusercontent.com/0x90-NOP/Hydroxide/master/changeLogs.lua"))()
 for i,v in next, changes do
     changelogs.Text = changelogs.Text .. "• " .. v .. '\n'
 end
