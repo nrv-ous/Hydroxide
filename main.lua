@@ -223,7 +223,7 @@ end
 
 -- < Globals : Abstractions >
 abs.isRobloxType = function(data) -- Checks if the type is Roblox-made
-    return type(check) ~= typeof(data)
+    return type(data) ~= typeof(data)
 end
 
 abs.tableSize = function(table) -- Returns the number of elements in a given table
@@ -640,7 +640,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
     end
 
     -- Add collapse to metatables
-    if getrawmetatable(data) and abs.tableSize(getrawmetatable(data)) ~= 0 and not abs.isRobloxType(data) then
+    if getrawmetatable(data) and abs.tableSize(data) ~= 0 and not abs.isRobloxType(data) then
         if not button.Collapse.Visible then
             addCollapse(button)
         end
