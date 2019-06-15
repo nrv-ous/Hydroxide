@@ -107,6 +107,7 @@ do -- Checks if the exploit has the required functions
         getconstants = debug.getconstants or getconstants or false,
         setconstant = debug.setconstant or setconstant or false,
         islclosure = islclosure or false,
+        getgc = getgc,
     }
 
     for i, f in next, functions do
@@ -245,6 +246,21 @@ abs.getUpvalues = function()
         end
     end
     return upvalues
+end
+
+abs.scanForUpvalue = function(upvalue)
+    local upval = {}
+    for i,v in next, getgc() do
+        if type(v) == "function" then
+            if getupvalue(v, upvalue) then
+                upval.data = getupvalue(v, upvalue)
+                upval.func = v
+                break
+            end
+        end
+    end
+
+    return upval
 end
 
 abs.getScripts = function() -- Returns all scripts and modules which the client has access to and are not parented to nil
