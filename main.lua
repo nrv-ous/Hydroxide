@@ -189,7 +189,7 @@ for i,v in next, misc:GetChildren() do -- Miscellaneous section clicks
     local finished = {
         SearchUpvalues = true
     }
-    if v:IsA("Frame") and not finished[v.Name] then
+    if v:IsA("Frame") then
         local label = v.Label
 
         label.MouseButton1Click:Connect(function()
