@@ -154,6 +154,7 @@ ui.addHighlight = function(element) -- Adds highlight to text when hovered over
 end
 
 local dataCache = {}
+local addedUpvalueCache = {}
 
 -- < Variables : Interface >
 
@@ -391,11 +392,14 @@ local showInfo = function(name, data, options)
     if not options then
         options = {}
     end
-
-    if options.addToExplorer then
-        infoBody.AddToExplorer.Visible = true
-        addExEvent = infoBody.AddToExplorer.Button.MouseButton1Click:Connect(function()
+    
+    if options.addToExplorer and not addedUpvalueCache[data] then
+        local addExplorer = infoBody.AddToExplorer
+        addExplorer.Visible = true
+        addExEvent = addExplorer.Button.MouseButton1Click:Connect(function()
             ui.addButton(name, data)
+            addedUpvalueCache[data] = true
+            addExplorer.Visible = false
         end)
     end
 
