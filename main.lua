@@ -383,6 +383,11 @@ local showInfo = function(name, data)
     infoBody.Type.Visible = true
     infoBody.Type.Text = "type: " .. dataType
 
+    infoBody.AddToExplorer.Visible = true
+    infoBody.AddToExplorer.Button.MouseButton1Click:Connect(function()
+        ui.addButton(name, data)
+    end)
+
     if dataType == "function" then
         infoBody.Upvalues.Text = "upvalues: " .. abs.tableSize(getupvalues(data))
         infoBody.Constants.Text = "constants: " .. abs.tableSize(getconstants(data))
