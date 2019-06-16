@@ -356,7 +356,7 @@ local attrs = {
 }
 
 local addExEvent
-local showInfo = function(name, data)
+local showInfo = function(name, data, options)
     if not information.Visible then
         welcome.Visible = false
         information.Visible = true
@@ -388,10 +388,16 @@ local showInfo = function(name, data)
     infoBody.Type.Visible = true
     infoBody.Type.Text = "type: " .. dataType
 
-    infoBody.AddToExplorer.Visible = true
-    addExEvent = infoBody.AddToExplorer.Button.MouseButton1Click:Connect(function()
-        ui.addButton(name, data)
-    end)
+    if not options then
+        options = {}
+    end
+
+    if options.addToExplorer then
+        infoBody.AddToExplorer.Visible = true
+        addExEvent = infoBody.AddToExplorer.Button.MouseButton1Click:Connect(function()
+            ui.addButton(name, data)
+        end)
+    end
 
     if dataType == "function" then
         infoBody.Upvalues.Text = "upvalues: " .. abs.tableSize(getupvalues(data))
@@ -693,7 +699,7 @@ local createUpvalue = function(name, data)
 
         viewSearchUpvalues = false
 
-        showInfo(name, data)
+        showInfo(name, data, {addToExplorer = true})
     end)
 
     upvalue.Parent = upvalScroll
