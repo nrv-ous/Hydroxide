@@ -658,14 +658,14 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
     end
 
     -- Add collapse to tables or functions with upvalues/environments
-    if ( dataType == "table" and abs.tableSize(data) ~= 0 ) or ( dataType == "function" and islclosure(data) and abs.tableSize(getupvalues(data)) ~= 0 ) then
+    if ( dataType == "table" and abs.tableSize(data) ~= 0 ) or ( dataType == "function" and islclosure(data) ) then
         local increment = 0
         if dataType == "function" then -- Get environment size
             increment = abs.tableSize(getfenv(data))
         end
 
         if not options.showCollapse then -- If the environment size of the function is more than the "script" element then add a collapse
-            if dataType ~= "function" or ( dataType == "function" and ( (getfenv(data).script) and increment > 1 ) or abs.tableSize(getupvalues(data)) ~= 0 ) then
+            if dataType ~= "function" or ( dataType == "function" and ( (getfenv(data).script) and increment > 1 ) or (abs.tableSize(getconstants(data)) ~= 0 or abs.tableSize(getfenv(data)) > 1 or abs.tableSize(getupvalues(data)) ~= 0) ) then
                 addCollapse(button)
             end
         end
@@ -763,6 +763,7 @@ local scanUpvalues = function()
     end
 end
 
+scanUpvalues()
 upvalSearch.MouseButton1Click:Connect(scanUpvalues)
 upvalQuery.FocusLost:Connect(function(fromEnter)
     if fromEnter then
