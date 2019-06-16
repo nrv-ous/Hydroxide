@@ -106,6 +106,7 @@ do -- Checks if the exploit has the required functions
         setupvalue = debug.setupvalue or setupvalue or setupval or false,
         getconstants = debug.getconstants or getconstants or false,
         setconstant = debug.setconstant or setconstant or false,
+        setreadonoly = setreadonly or false,
         islclosure = islclosure or false,
         getgc = getgc,
     }
@@ -253,6 +254,8 @@ abs.getUpvalues = function()
             end
         end
     end
+
+    wait()
     return upvalues
 end
 
@@ -267,7 +270,8 @@ abs.scanForUpvalue = function(upvalue)
             end
         end
     end
-
+    
+    wait()
     return upval
 end
 
@@ -286,6 +290,7 @@ abs.getScripts = function() -- Returns all scripts and modules which the client 
         end
     end
 
+    wait()
     return scripts, modules
 end
 
@@ -672,11 +677,30 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
             addCollapse(button)
         end
 
-        ui.addButton("Metatable", getrawmetatable(data), button.Children, {isMetatable = true})
+        local filteredMetatable = {}
+        for i,v in next, getrawmetatable(data) do
+            if v ~= getrawmetatable(data) then
+                filteredMetatable[i] = v
+            end
+        end
+
+        ui.addButton("Metatable", filteredMetatable, button.Children, {isMetatable = true})
     end
 
     return button
 end 
+
+-- < RemoteSpy >
+local gmt = getrawmetatable(game)
+setreadonly(gmt, false)
+local nmc = gmt.__namecall
+
+gmt.__namecall = function(t, ...)
+
+    return nmc(t, ...)
+end
+
+-- < HttpSpy >
 
 -- < Search Upvalues >
 local currentUpvalues = {}
@@ -722,11 +746,6 @@ end)
 
 upvalScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 local scanUpvalues = function()
-    if upvalQuery.Text:len() == 0 then
-        ui.msg("", "Type at least one character!")
-        return
-    end
-
     for i,v in next, upvalScroll:GetChildren() do
         if not v:IsA("UIListLayout") then
             v:Destroy()
