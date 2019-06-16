@@ -355,12 +355,17 @@ local attrs = {
     }
 }
 
+local addExEvent
 local showInfo = function(name, data)
     if not information.Visible then
         welcome.Visible = false
         information.Visible = true
     end
 
+    if addExEvent then
+        addExEvent:Disconnect()
+    end
+    
     local infoBody = information.Body
     local icon = information:FindFirstChild("Name").Icon
     local index = icon.Index
@@ -384,7 +389,7 @@ local showInfo = function(name, data)
     infoBody.Type.Text = "type: " .. dataType
 
     infoBody.AddToExplorer.Visible = true
-    infoBody.AddToExplorer.Button.MouseButton1Click:Connect(function()
+    addExEvent = infoBody.AddToExplorer.Button.MouseButton1Click:Connect(function()
         ui.addButton(name, data)
     end)
 
