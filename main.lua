@@ -408,6 +408,7 @@ local attrs = {
     }
 }
 
+local scanUpvalues
 local addExEvent
 local viewValueEvent 
 local vVBackEvent 
@@ -464,8 +465,8 @@ local showInfo = function(name, data, options)
         end
 
         viewValueEvent = infoBody.ViewValue.Button.MouseButton1Click:Connect(function()
-            local icon = viewValue:FindFirstChild("Name").Icon
-            local index = icon.Index
+            local vVIcon = viewValue:FindFirstChild("Name").Icon
+            local vVIndex = vVIcon.Index
 
             information.Visible = false
 
@@ -483,11 +484,11 @@ local showInfo = function(name, data, options)
 
             viewValue.Visible = true
             viewValue.ValueBox.Text = tostring(data)
-            icon.Image = "rbxassetid://" .. typeIcon[dataType]
-            index.Text = name
+            vVIcon.Image = "rbxassetid://" .. typeIcon[dataType]
+            vVIndex.Text = name
 
-            index.Size = UDim2.new(0, index.TextBounds.X, 0, 20)
-            icon.Position = UDim2.new(1, -(index.TextBounds.X + 24), 0, 4)
+            vVIndex.Size = UDim2.new(0, vVIndex.TextBounds.X, 0, 20)
+            vVIcon.Position = UDim2.new(1, -(vVIndex.TextBounds.X + 24), 0, 4)
 
             if setValueType.Visible then
                 setValueType.Visible = false
@@ -573,6 +574,12 @@ local showInfo = function(name, data, options)
                     end
 
                     svtClear()
+                    scanUpvalues()
+                    dataType = type(newValue)
+                    icon.Image = "rbxassetid://" .. typeIcon[dataType]
+                    vVIcon.Image = icon.Image
+                    infoBody.Type.Text = "type: " .. dataType
+                    viewValue.ValueBox.Text = tostring(newValue)
                     setValueType.Visible = false
                 end)
             end)
@@ -927,7 +934,7 @@ misc.SearchUpvalues.Label.MouseButton1Click:Connect(function()
 end)
 
 upvalScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-local scanUpvalues = function()
+scanUpvalues = function()
     for i,v in next, upvalScroll:GetChildren() do
         if not v:IsA("UIListLayout") then
             v:Destroy()
