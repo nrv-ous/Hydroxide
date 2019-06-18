@@ -93,7 +93,7 @@ end
 -- <Environment Check>
 do -- Checks if the exploit has the required functions
     if not getgenv then
-        print("<OH-> : Your exploit does not have getgenv, which is a vital function.")
+        warn("<OH-> : Your exploit does not have getgenv, which is a vital function.")
         return
     end
 
@@ -106,7 +106,8 @@ do -- Checks if the exploit has the required functions
         setupvalue = debug.setupvalue or setupvalue or setupval or false,
         getconstants = debug.getconstants or getconstants or false,
         setconstant = debug.setconstant or setconstant or false,
-        setreadonoly = setreadonly or false,
+        isexploitclosure = is_synapse_function or is_neutron_function or function() return false end,
+        setreadonly = setreadonly or false,
         islclosure = islclosure or false,
         getgc = getgc,
     }
@@ -138,7 +139,6 @@ for i,v in next, getreg() do
 end
 
 -- < Variables >
-
 getgenv().ui = {}
 getgenv().abs = {}
 
@@ -157,13 +157,16 @@ end
 local dataCache = {}
 local addedUpvalueCache = {}
 
--- < Variables : Interface >
+local tableCache = {}
+local functionCache = {}
 
+-- < Variables : Interface >
 local interface = game:GetObjects("rbxassetid://3223506759")[1]
 
 local drag = interface.Drag
 local messageBox = interface.MessageBox
 local searchUpvalues = interface.SearchUpvalues
+local setValueType = interface.SetValueType
 
 local body = drag.Body
 local border = drag.BorderFrame
@@ -172,11 +175,12 @@ local collapse = drag.Collapse
 local sidebar = body.Sidebar
 local information = body.Information
 local console = body.Console
+local remoteSpy = body.RemoteSpy
+local viewValue = body.ViewValue
 local misc = body.Miscellaneous.List
 local welcome = body.Welcome.Scroll
 
 -- < Variables : Interface Instantiation > 
-
 local buttonClone = sidebar._G:Clone() -- Creates a usable sidebar button template
 buttonClone.ClipsDescendants = true
 buttonClone.Icon.ImageTransparency = 0
@@ -198,6 +202,10 @@ for i,v in next, misc:GetChildren() do -- Miscellaneous section clicks
         label.MouseButton1Click:Connect(function()
             if not finished[v.Name] then
                 ui.msg("Woops!", '"' .. label.Text .. "\" is not available yet!")
+            end
+
+            if v.Name == "SearchUpvalues" then
+                setValueType.Visible = false
             end
         end)
 
@@ -237,19 +245,18 @@ abs.tableSize = function(table) -- Returns the number of elements in a given tab
 end
 
 abs.getUpvalues = function()
-    local is_synapse_function = is_synapse_function
-    if not is_synapse_function then
-        is_synapse_function = function()
-            return false
-        end
-    end
-
     local upvalues = {}
     for i,v in next, getgc() do
-        if type(v) == "function" and not is_synapse_function(v) then
+        if type(v) == "function" and not isexploitclosure(v) then
             for k,x in next, getupvalues(v) do
-                if not upvalues[k] then
-                    upvalues[k] = x
+                local cache 
+                local dataType = type(x)
+
+                local byValue = {string = true, boolean = true, number = true}
+
+                        -- check by value                               -- check by key
+                if (not byValue[dataType] and not upvalues[x]) or (byValue[dataType] and not upvalues[k]) then
+                    upvalues[k] = {data = x, func = v}
                 end
             end
         end
@@ -326,6 +333,46 @@ do
     end)
 end
 
+-- < Interface : Set Value Type >
+local svtClear = function()
+    for i,v in next, setValueType:GetChildren() do
+        if v:FindFirstChild("Label") then
+            v.Text = ''
+            v.Label.Font = "SourceSans"
+        end
+    end
+end
+
+local svtEvent
+local svtNumber = setValueType.Number
+local svtString = setValueType.String
+local svtBoolean = setValueType.Boolean
+local svtUserdata = setValueType.Userdata
+
+svtNumber.MouseButton1Click:Connect(function()
+    svtClear()
+    svtNumber.Text = '✓'
+    svtNumber.Label.Font = "SourceSansSemibold"
+end)
+
+svtString.MouseButton1Click:Connect(function()
+    svtClear()
+    svtString.Text = '✓'
+    svtString.Label.Font = "SourceSansSemibold"
+end)
+
+svtBoolean.MouseButton1Click:Connect(function()
+    svtClear()
+    svtBoolean.Text = '✓'
+    svtBoolean.Label.Font = "SourceSansSemibold"
+end)
+
+svtUserdata.MouseButton1Click:Connect(function()
+    svtClear()
+    svtUserdata.Text = '✓'
+    svtUserdata.Label.Font = "SourceSansSemibold"
+end)
+
 -- < Interface : Information > 
 local typeIcon = { 
     string = 3285671510,
@@ -333,7 +380,7 @@ local typeIcon = {
     boolean = 3285671510,
     table = 3285651068,
     userdata = 3285664726,
-    ['function'] = 3285661880
+    ["function"] = 3285661880
 }
 
 local attrs = {
@@ -362,6 +409,9 @@ local attrs = {
 }
 
 local addExEvent
+local viewValueEvent 
+local vVBackEvent 
+local vVChangeEvent
 local showInfo = function(name, data, options)
     if not information.Visible then
         welcome.Visible = false
@@ -402,9 +452,130 @@ local showInfo = function(name, data, options)
         local addExplorer = infoBody.AddToExplorer
         addExplorer.Visible = true
         addExEvent = addExplorer.Button.MouseButton1Click:Connect(function()
-            ui.addButton(name, data)
+            ui.addButton(name, data, root, {func = options.func})
             addedUpvalueCache[data] = true
             addExplorer.Visible = false
+        end)
+    end
+
+    if attrs[dataType].ViewValue then
+        if viewValueEvent then
+            viewValueEvent:Disconnect()
+        end
+
+        viewValueEvent = infoBody.ViewValue.Button.MouseButton1Click:Connect(function()
+            local icon = viewValue:FindFirstChild("Name").Icon
+            local index = icon.Index
+
+            information.Visible = false
+
+            if options.tbl then
+                data = options.tbl[name]
+            elseif options.func then
+                if options.upval then
+                    data = getupvalue(options.func, name)
+                elseif options.env then
+                    data = getfenv(options.func)[name]
+                elseif options.constant then
+                    data = getconstant(options.func, tonumber(name))
+                end
+            end
+
+            viewValue.Visible = true
+            viewValue.ValueBox.Text = tostring(data)
+            icon.Image = "rbxassetid://" .. typeIcon[dataType]
+            index.Text = name
+
+            index.Size = UDim2.new(0, index.TextBounds.X, 0, 20)
+            icon.Position = UDim2.new(1, -(index.TextBounds.X + 24), 0, 4)
+
+            if setValueType.Visible then
+                setValueType.Visible = false
+            end
+
+            if vVBackEvent then
+                vVBackEvent:Disconnect()
+            end
+
+            if vVChangeEvent then
+                vVChangeEvent:Disconnect()
+            end
+
+            vVBackEvent = viewValue.Back.MouseButton1Click:Connect(function()
+                viewValue.Visible = false
+                information.Visible = true
+            end)
+
+            vVChangeEvent = viewValue.Change.MouseButton1Click:Connect(function()
+                setValueType.Visible = true
+                if svtEvent then
+                    svtEvent:Disconnect()
+                end
+                svtEvent = setValueType.Set.MouseButton1Click:Connect(function()
+                    local typeSelected 
+                    for i,v in next, setValueType:GetChildren() do
+                        if v:IsA("TextButton") and v.Text == '✓' then
+                            typeSelected = v.Name:lower()
+                        end
+                    end
+                    
+                    if not typeSelected then
+                        ui.msg('', "You must select a type!")
+                        return
+                    end
+
+                    local newValue
+                    local valueText = viewValue.ValueBox.Text
+                    if typeSelected == "number" then
+                        newValue = tonumber(valueText)
+                        if not newValue then
+                            ui.msg('', "Invalid number value!")
+                            return
+                        end
+                    elseif typeSelected == "string" then
+                        newValue = valueText
+                    elseif typeSelected == "boolean" then
+                        if valueText == "true" then
+                            newValue = true
+                        elseif valueText == "false" then
+                            newValue = false
+                        else
+                            ui.msg('', "Invalid boolean value!")
+                            return
+                        end
+                    elseif typeSelected == "userdata" then
+                        newValue = loadstring("return " .. valueText)()
+                        if not newValue or typeof(newValue) ~= "Instance" then
+                            ui.msg('', "Invalid instance value!")
+                            return
+                        end
+                    end
+
+                    if options.tbl then
+                        local index = options.tbl[name]
+                        options.tbl[name] = newValue
+
+                        print(options.tbl[name])
+                    end
+
+                    if options.upval then
+                        setupvalue(options.func, name, newValue)
+
+                        print(getupvalue(options.func, name))
+                    elseif options.env then
+                        getfenv(options.func)[name] = newValue
+
+                        print(getfenv(options.func)[name])
+                    elseif options.constant then
+                        setconstant(options.func, tostring(name), newValue)
+
+                        print(getconstant(options.func, tostring(name)))
+                    end
+
+                    svtClear()
+                    setValueType.Visible = false
+                end)
+            end)
         end)
     end
 
@@ -454,7 +625,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
     label.Size = UDim2.new(0, label.TextBounds.X + 10, 0, 20)
     ui.addHighlight(label) -- Add highlight to sidebar button
     label.MouseButton1Click:Connect(function()
-        showInfo(name, data)
+        showInfo(name, data, options)
     end)
 
     local fn = {}
@@ -555,10 +726,10 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
                     local cache = {} -- Remove all cloned data
                     for i, e in next, data do
                         if not cache[i] then
-                            local options, module = {}
+                            local options, module = {tbl = data}
 
                             -- Check if the passed data is a script
-                            if type(e) == 'function' and ({["rbxassetid://3285607721"] = true, ["rbxassetid://3285696601"] = true})[root.Icon.Image] then
+                            if type(e) == "function" and ({["rbxassetid://3285607721"] = true, ["rbxassetid://3285696601"] = true})[root.Icon.Image] then
                                 if scripts[i] then
                                     options.icon = 3285608077
                                 elseif modules[i] then
@@ -568,6 +739,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
                             end
 
                             -- Create button for the data
+                            options.tbl = data
                             local data = ui.addButton(tostring(i), e, button.Children, options)
 
                             -- not sure why this happens???? but delete if it does happen, otherwise parent it
@@ -600,15 +772,24 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
                     end
 
                     if abs.tableSize(filteredUpvs) ~= 0 and not button.Children:FindFirstChild("Upvalues") then
-                        ui.addButton("Upvalues", filteredUpvs, button.Children, {showCollapse = true, upvalueTable = true})
+                        local btn = ui.addButton("Upvalues", {}, button.Children, {showCollapse = true})
+                        for i,v in next, filteredUpvs do
+                            ui.addButton(tostring(i), v, btn.Children, {func = data, upval = true})
+                        end
                     end
 
                     if abs.tableSize(filteredEnv) ~= 0 and not button.Children:FindFirstChild("Environment") then
-                        ui.addButton("Environment", filteredEnv, button.Children, {showCollapse = true, envTable = true})
+                        local btn = ui.addButton("Environment", {}, button.Children, {showCollapse = true})
+                        for i,v in next, filteredEnv do
+                            ui.addButton(tostring(i), v, btn.Children, {func = data, env = true})
+                        end
                     end
 
                     if abs.tableSize(constants) ~= 0 and not button.Children:FindFirstChild("Constants") then
-                        ui.addButton("Constants", constants, button.Children, {showCollapse = true, constsTable = true})
+                        local btn = ui.addButton("Upvalues", {}, button.Children, {showCollapse = true})
+                        for i,v in next, getconstants(data) do
+                            ui.addButton(tostring(i), v, btn.Children, {func = data, constant = true})
+                        end
                     end
                 end
 
@@ -713,7 +894,7 @@ local upvalScroll = searchUpvalues.Upvalues.Scroll
 local upvalueClone = upvalScroll.Upvalue:Clone()
 upvalScroll.Upvalue:Destroy()
 
-local createUpvalue = function(name, data)
+local createUpvalue = function(name, data, func)
     local upvalue = upvalueClone:Clone()
     local label = upvalue.Label
     
@@ -723,11 +904,12 @@ local createUpvalue = function(name, data)
 
     label.MouseButton1Click:Connect(function()
         searchUpvalues.Visible = false
+        viewValue.Visible = false
         border.Visible = true
 
         viewSearchUpvalues = false
 
-        showInfo(name, data, {addToExplorer = true})
+        showInfo(name, data, {addToExplorer = true, func = func, upval = true})
     end)
 
     upvalue.Parent = upvalScroll
@@ -757,7 +939,7 @@ local scanUpvalues = function()
     local text = upvalQuery.Text
     for i,v in next, abs.getUpvalues() do
         if text:lower():sub(1, text:len()) == tostring(i):lower():sub(1, text:len()) then -- holy god this is long
-            createUpvalue(tostring(i), v)
+            createUpvalue(tostring(i), v.data, v.func)
             upvalScroll.CanvasSize = upvalScroll.CanvasSize + UDim2.new(0, 0, 0, 20)
         end
     end
