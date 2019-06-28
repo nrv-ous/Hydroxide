@@ -793,7 +793,7 @@ ui.addButton = function(name, data, parent, options) -- Function to add new side
                     end
 
                     if abs.tableSize(constants) ~= 0 and not button.Children:FindFirstChild("Constants") then
-                        local btn = ui.addButton("Upvalues", {}, button.Children, {showCollapse = true})
+                        local btn = ui.addButton("Constants", {}, button.Children, {showCollapse = true})
                         for i,v in next, getconstants(data) do
                             ui.addButton(tostring(i), v, btn.Children, {func = data, constant = true})
                         end
@@ -884,7 +884,6 @@ setreadonly(gmt, false)
 local nmc = gmt.__namecall
 
 gmt.__namecall = function(t, ...)
-
     return nmc(t, ...)
 end
 
