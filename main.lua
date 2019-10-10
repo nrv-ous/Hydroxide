@@ -1,4 +1,4 @@
-if hydroxide then
+if oh then
     error("Hydroxide is already running!")
 end
 
