@@ -1,4 +1,4 @@
-if oh then
+if hydroxide then
     error("Hydroxide is already running!")
 end
 
@@ -21,9 +21,7 @@ local environment = {
 }
 
 for i,v in next, environment do
-    if not v then
-        error("Your exploit does not support Hydroxide!")
-    end
+    assert(v, "Your exploit does not support Hydroxide!")
 end
 
 local web_import = function(file)
@@ -35,8 +33,10 @@ local rbx_import = function(id)
 end
 
 getgenv().oh = {}
-oh.gui = rbx_import()
-oh.assets = rbx_import()
+oh.gui = rbx_import(4055219910)
+oh.assets = rbx_import(4055228005)
 oh.environment = environment
-oh.aux = web_import("auxiliary.lua")
 
+web_import("remote_spy.lua")
+
+oh.gui.Parent = game:GetService("CoreGui")

@@ -26,10 +26,10 @@ local nmc = gmt.__namecall
 ]]--
 
 local is_remote = function(object)
-    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")
+    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction") or nil
 end
 
-local find_remote = function(name)1
+local find_remote = function(name)
     for i,v in next, remotes do
         if i.Name:sub(1, name:len()):lower() == name:lower() then
             return i
@@ -41,25 +41,16 @@ end
     C O R E 
 ]]--
 
-local new_log = function(t, i, results)
-    local log = oh.assets.RemoteResult:Clone()
-
-    for i,v in next, results do
-        
-    end
-end
-
 for i,v in next, game:GetDescendants() do
-    local results = setmetatable({}, { __newindex = new_log })
-    _ = is_remote(v) and rawset(remotes, v, results)
+    remotes[v] = is_remote(v)
 end
 
 game.DescendantAdded:Connect(function(object)
-    _ = is_remote(object) and rawset(remotes, object, {})
+    remotes[object] = is_remote(object)
 end)
 
 game.DescendantRemoving:Connect(function(object)
-    _ = rawget(remotes, object) and rawset(remotes, object, nil)
+    
 end)
 
 setreadonly(gmt, false)
@@ -79,6 +70,12 @@ gmt.__namecall = function(obj, ...)
 
     return nmc(obj, ...)
 end
+
+--[[
+
+Objective : Log remotes with the hooked __namecall method, then display each log in the specified remote's output window.
+    Each log is in it's own frame inside of a container, with each parameter in it's separate pod, parented to the output window.
+]]
 
 --[[
     T E R M I N A L   C O M M A N D S

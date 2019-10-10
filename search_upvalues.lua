@@ -18,7 +18,7 @@ local find_upvalues = function(value)
             for k,x in next, env.getupvalues(v) do
                 if (type(x) == "string" and x:find(value)) or x == value then
                     table.insert(results[v], k, x)
-                end
+                end 
             end
         end
     end

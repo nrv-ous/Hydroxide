@@ -16,7 +16,6 @@ http_spy.prefix = "http"
 http_spy.color = Color3.new(0, 1, 0)
 
 http_spy.inspect = function(link)
-    
     terminal.output(http_spy.prefix, http_spy.color, "inspecting link")
 end
 
@@ -35,7 +34,7 @@ http_spy.spoof = function(link, type, value)
     spoofed_requests[link] = return_value
     terminal.output(http_spy.prefix, http_spy.color, "spoofed return value assigned")
 end
-
+    
 http_spy.block = function(link)
     blocked_requests[link] = true 
     terminal.output(http_spy.prefix, http_spy.color, "link blocked")
