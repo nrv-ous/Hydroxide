@@ -21,7 +21,7 @@ local options = window.Options
 local tween_service = game:GetService("TweenService")
 local selected = "RemoteEvent"
 
-local gmt = env.getmetatable(game)
+local gmt = env.get_metatable(game)
 local nmc = gmt.__namecall
 
 --[[
