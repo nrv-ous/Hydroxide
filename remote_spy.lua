@@ -55,6 +55,11 @@ setmetatable(remotes, {
         asset.Parent = logs
         asset.Label.Text = i.Name
         logs.CanvasSize = logs.CanvasSize + UDim2.new(0, 0, 0, 25)
+
+        asset.Toggle.MouseButton1Click:Connect(function()
+            ignore[i] = not ignore[i]
+        end)
+
     end
 })
 
@@ -80,9 +85,7 @@ gmt.__namecall = function(obj, ...)
     local vargs = {...}
 
     if is_remote(obj) and not ignore[obj] then
-        print(obj)
         local remote = remotes[obj]
-        print(remote, remote.logged)
         table.insert(remote.logged, vargs)
         remote.logs = remote.logs + 1
         window[obj.ClassName][obj.Name].Count.Text = remote.logs
