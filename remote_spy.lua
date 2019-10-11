@@ -72,7 +72,7 @@ game.DescendantAdded:Connect(function(object)
 end)
 
 game.DescendantRemoving:Connect(function(object)
-    if remotes[object] then
+    if not object:IsDescendantOf(game) and remotes[object] then
         local logs = window[object.ClassName]
         remotes[object] = nil
         logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
