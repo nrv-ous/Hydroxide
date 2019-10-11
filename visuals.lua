@@ -53,6 +53,7 @@ for i,v in next, extensions:GetChildren() do
             animation:Play()
 
             tab.Visible = true
+			selected_extension.Visible = false
             selected_extension = tab
         end)
 
