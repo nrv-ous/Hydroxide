@@ -80,6 +80,7 @@ gmt.__namecall = function(obj, ...)
     local vargs = {...}
 
     if is_remote(obj) and not ignore[obj] then
+        print(obj)
         local remote = remotes[obj]
         print(remote, remote.logged)
         table.insert(remote.logged, vargs)
