@@ -29,7 +29,7 @@ close.MouseButton1Up:Connect(function()
 	animation:Play()
 end)
 
-local selected_extension 
+local selected_extension = tabs.Initialized
 for i,v in next, extensions:GetChildren() do
     if v:IsA("TextButton") then
         v.MouseEnter:Connect(function()
@@ -51,10 +51,6 @@ for i,v in next, extensions:GetChildren() do
             local animation = tween_service:Create(v, TweenInfo.new(0.10), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
             local tab = tabs[v.Name]
             animation:Play()
-
-            if selected_extension then
-                selected_extension.Visible = false
-            end
 
             tab.Visible = true
             selected_extension = tab
