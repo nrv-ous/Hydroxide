@@ -29,7 +29,7 @@ local nmc = gmt.__namecall
 ]]--
 
 local is_remote = function(object)
-    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction") or nil
+    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")) or nil
 end
 
 local find_remote = function(name)
@@ -107,26 +107,28 @@ end
 ]]--
 
 for i,v in next, options:GetChildren() do
-    v.MouseButton1Click:Connect(function()
-        local anim = tween_service:Create(v, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
-        anim:Play()
-        
-        selected = v.Name
-    end)
-
-    v.MouseEnter:Connect(function()
-        if selected ~= v.Name then
+    if v:IsA("TextButton") then
+        v.MouseButton1Click:Connect(function()
             local anim = tween_service:Create(v, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
             anim:Play()
-        end
-    end)
+            
+            selected = v.Name
+        end)
 
-    v.MouseLeave:Connect(function()
-        if selected ~= v.Name then
-            local anim = tween_service:Create(v, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
-            anim:Play()
-        end
-    end)
+        v.MouseEnter:Connect(function()
+            if selected ~= v.Name then
+                local anim = tween_service:Create(v, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
+                anim:Play()
+            end
+        end)
+
+        v.MouseLeave:Connect(function()
+            if selected ~= v.Name then
+                local anim = tween_service:Create(v, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
+                anim:Play()
+            end
+        end)
+    end
 end
 
 return remote_spy
