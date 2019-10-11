@@ -67,16 +67,18 @@ game.DescendantAdded:Connect(function(object)
 end)
 
 game.DescendantRemoving:Connect(function(object)
-    local logs = window[object.ClassName]
-    remotes[object] = nil
-    logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
+    if remotes[object] then
+        local logs = window[object.ClassName]
+        remotes[object] = nil
+        logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
+    end
 end)
 
 setreadonly(gmt, false)
 gmt.__namecall = function(obj, ...)
     local method = env.get_namecall()
     local vargs = {...}
-    
+
     if is_remote(obj) and not ignore[obj] then
         local remote = remotes[obj]
         table.insert(remote.logged, vargs)
