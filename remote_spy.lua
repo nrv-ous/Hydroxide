@@ -81,9 +81,7 @@ end)
 
 setreadonly(gmt, false)
 gmt.__namecall = function(obj, ...)
-    local method = env.get_namecall()
     local vargs = {...}
-
     local methods = {
         FireServer = true,
         InvokeServer = true,
@@ -91,7 +89,7 @@ gmt.__namecall = function(obj, ...)
         Invoke = true
     }
 
-    if methods[method] and not ignore[obj] then
+    if methods[env.get_namecall()] and not ignore[obj] then
         local remote = remotes[obj]
         table.insert(remote.logged, vargs)
         remote.logs = remote.logs + 1
