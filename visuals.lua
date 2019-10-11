@@ -30,6 +30,12 @@ close.MouseButton1Up:Connect(function()
 end)
 
 local selected_extension = tabs.Initialized
+local titles = {
+    RemoteSpyInspection = "Remote Spy : Inspection",
+    ValueInspector = "Value Inspection",
+    SearchUpvalues = "Search Upvalues",
+}
+
 for i,v in next, extensions:GetChildren() do
     if v:IsA("TextButton") then
         v.MouseEnter:Connect(function()
@@ -53,6 +59,9 @@ for i,v in next, extensions:GetChildren() do
             animation:Play()
 
             tab.Visible = true
+
+            body.TabsLabel.Text = titles[v.Name] or v.Name
+
             selected_extension.Visible = false
             selected_extension = tab
         end)
