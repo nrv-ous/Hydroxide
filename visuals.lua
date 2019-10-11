@@ -1,3 +1,5 @@
+local tween_service = game:GetService("TweenService")
+
 local base = oh.gui.Base
 local drag = base.Drag
 local body = base.Body
@@ -53,7 +55,7 @@ for i,v in next, extensions:GetChildren() do
             if selected_extension then
                 selected_extension.Visible = false
             end
-            
+
             tab.Visible = true
             selected_extension = tab
         end)
