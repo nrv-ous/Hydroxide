@@ -8,13 +8,11 @@ local gui = oh.gui
 local assets = oh.assets
 local terminal = oh.terminal
 
-local body = gui.Base.Body
-local tabs = body.Tabs
+local tabs = gui.Base.Body.Tabs
 
 local window = tabs.RemoteSpy
 local inspection = tabs.RemoteSpyInspection
 
-local logged = window.Logged
 local options = window.Options
 
 
@@ -29,7 +27,7 @@ local nmc = gmt.__namecall
 ]]--
 
 local is_remote = function(object)
-    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction") or nil
+    return ((object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")) and {logs = 0, logged = {}}) or nil
 end
 
 local find_remote = function(name)
@@ -44,16 +42,30 @@ end
     C O R E 
 ]]--
 
+setmetatable(remotes, {
+    __newindex = function(t, i)
+        local asset = assets.RemoteObject:Clone()
+        local logs = window[i.ClassName]
+
+        asset.Name = i.Name
+        asset.Parent = logs
+        asset.Label.Text = i.Name
+        logs.CanvasSize = logs.CanvasSize + UDim2.new(0, 0, 0, 25)
+    end
+})
+
 for i,v in next, game:GetDescendants() do
-    remotes[v] = is_remote(v) and {}
+    remotes[v] = is_remote(v) 
 end
 
 game.DescendantAdded:Connect(function(object)
-    remotes[object] = is_remote(object) and {}
+    remotes[object] = is_remote(object)
 end)
 
 game.DescendantRemoving:Connect(function(object)
-    
+    local logs = window[object.ClassName]
+    remotes[object] = nil
+    logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
 end)
 
 setreadonly(gmt, false)
@@ -68,7 +80,10 @@ gmt.__namecall = function(obj, ...)
     }
 
     if methods[method] and not ignore[obj] then
-        table.insert(remotes[obj], vargs)
+        local remote = remotes[obj]
+        table.insert(remote.logged, vargs)
+        remote.logs = remote.logs + 1
+        window[obj.ClassName][obj.Name].Count.Text = remote.logs
     end
 
     return nmc(obj, ...)
