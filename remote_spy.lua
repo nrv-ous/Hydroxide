@@ -71,13 +71,13 @@ game.DescendantAdded:Connect(function(object)
     remotes[object] = is_remote(object)
 end)
 
-game.DescendantRemoving:Connect(function(object)
+--[[game.DescendantRemoving:Connect(function(object)
     if not object:IsDescendantOf(game) and remotes[object] then
         local logs = window[object.ClassName]
         remotes[object] = nil
         logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
     end
-end)
+end)]]
 
 setreadonly(gmt, false)
 gmt.__namecall = function(obj, ...)
