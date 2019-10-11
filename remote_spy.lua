@@ -45,11 +45,11 @@ end
 ]]--
 
 for i,v in next, game:GetDescendants() do
-    remotes[v] = is_remote(v)
+    remotes[v] = is_remote(v) and {}
 end
 
 game.DescendantAdded:Connect(function(object)
-    remotes[object] = is_remote(object)
+    remotes[object] = is_remote(object) and {}
 end)
 
 game.DescendantRemoving:Connect(function(object)
