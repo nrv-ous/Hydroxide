@@ -99,6 +99,8 @@ gmt.__namecall = function(obj, ...)
     return nmc(obj, ...)
 end
 
+getgenv().remotes = remotes
+
 --[[
 
 Objective : Log remotes with the hooked __namecall method, then display each log in the specified remote's output window.
