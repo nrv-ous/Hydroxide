@@ -90,7 +90,7 @@ gmt.__namecall = function(obj, ...)
         Invoke = true
     }
 
-    if remotes[obj] and not ignore[obj] then
+    if remotes[obj] and is_remote(obj) and not ignore[obj] then
         local remote = remotes[obj]
         table.insert(remote.logged, vargs)
         remote.logs = remote.logs + 1
