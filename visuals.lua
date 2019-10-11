@@ -58,10 +58,9 @@ for i,v in next, extensions:GetChildren() do
             local tab = tabs[v.Name]
             animation:Play()
 
-            tab.Visible = true
-
             body.TabsLabel.Text = titles[v.Name] or v.Name
-
+            
+            tab.Visible = true
             selected_extension.Visible = false
             selected_extension = tab
         end)
