@@ -90,10 +90,11 @@ gmt.__namecall = function(obj, ...)
         Invoke = true
     }
 
-    if remotes[obj] and is_remote(obj) and not ignore[obj] then
+    if methods[env.get_namecall()] not ignore[obj] then
         local remote = remotes[obj]
         table.insert(remote.logged, vargs)
         remote.logs = remote.logs + 1
+        print(obj.Parent, obj)
         window[obj.ClassName][obj.Name].Count.Text = remote.logs
     end
 
