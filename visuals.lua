@@ -14,7 +14,7 @@ close.MouseEnter:Connect(function()
 	animation:Play()
 end)
 
-close.MouseEnter:Connect(function()
+close.MouseLeave:Connect(function()
     local animation = tween_service:Create(close, TweenInfo.new(0.10), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
 	animation:Play()
 end)
@@ -56,7 +56,5 @@ for i,v in next, extensions:GetChildren() do
             selected_extension.Visible = false
             selected_extension = tab
         end)
-
-
     end
 end
