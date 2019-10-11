@@ -9,11 +9,14 @@ local assets = oh.assets
 local terminal = oh.terminal
 
 local body = gui.Base.Body
-local window = body.RemoteSpy
+local tabs = body.Tabs
+
+local window = tabs.RemoteSpy
+local inspection = tabs.RemoteSpyInspection
+
 local logged = window.Logged
 local options = window.Options
 
-local inspection = body.RemoteSpyInspection
 
 local tween_service = game:GetService("TweenService")
 local selected = "RemoteEvent"
