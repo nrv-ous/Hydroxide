@@ -29,7 +29,7 @@ local nmc = gmt.__namecall
 ]]--
 
 local is_remote = function(object)
-    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction") or nil
+    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")) or nil
 end
 
 local find_remote = function(name)
