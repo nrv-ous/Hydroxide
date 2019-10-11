@@ -44,6 +44,10 @@ end
 
 setmetatable(remotes, {
     __newindex = function(t, i)
+        if not is_remote(i) then
+            return
+        end
+
         local asset = assets.RemoteObject:Clone()
         local logs = window[i.ClassName]
 
