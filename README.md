@@ -1,7 +1,7 @@
 *This is not a finished product; there* ***will*** *be bugs.*
 
 <p align="center">
-  <img src="https://i.vgy.me/3hu0ZO.png">
+  <img src="https://i.vgy.me/6IQrbw.png">
 </p>
 
 # Hydroxide
