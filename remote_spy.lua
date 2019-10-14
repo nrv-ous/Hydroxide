@@ -13,6 +13,13 @@ local selected_option = "RemoteEvent"
 local remotes = {}
 local ignore = {}
 
+local hard_ignore = { -- hard-coded ignore
+    CharacterSoundEvent = {
+        "boolean",
+        "boolean"
+    }
+}
+
 local tween_service = game:GetService("TweenService")
 
 local gmt = env.get_metatable(game)
@@ -22,6 +29,28 @@ local nmc = gmt.__namecall
     A U X I L I A R Y
 ]]--
 
+local transform_path = function(raw)
+    local split = raw:split('.')
+    local result = ""
+    
+    if #split == 1 and not game:FindFirstChild(split[1]) then
+      return split[1] .. " --[[ Parent is \"nil\" or object is destroyed ]]"
+    end
+    
+    for i,v in next, split do
+      if v:find("%A") then
+        result = result:sub(1, result:len() - 1)
+        v = "[\"" .. v .. "\"]"
+      end
+      
+      result = result .. v .. "."
+    end
+    
+    result = result:gsub("Players.LocalPlayer." .. game:GetService("Players").LocalPlayer.Name, "LocalPlayer")
+    result = result:gsub("Players.LocalPlayer[\"" .. game:GetService("Players").LocalPlayer.Name .. "\"]", "LocalPlayer")
+    
+    return "game." .. result:sub(1, result:len() - 1)
+  end
 
 local dump_table
 dump_table = function(t)
@@ -38,7 +67,7 @@ dump_table = function(t)
             end
         elseif type(i) == "number" then
         elseif typeof(i) == "Instance" then
-            result = result .. '[' .. ("game." .. i:GetFullName())
+            result = result .. '[' .. transform_path(i:GetFullName())
         else
             result = result .. '[' .. tostring(i)
         end
@@ -49,14 +78,27 @@ dump_table = function(t)
         elseif type(v) == "string" then
             result = result .. '"' .. v .. '"'
         elseif typeof(v) == "Instance" then
-            result = result .. ("game." .. v:GetFullName())
+            result = result .. transform_path(v:GetFullName())
         elseif typeof(v) == "Vector3" then
             result = result .. "Vector3.new(" .. tostring(v) .. ")"
         elseif typeof(v) == "CFrame" then
             result = result .. "CFrame.new(" .. tostring(v) .. ")"
         elseif typeof(v) == "Color3" then
             result = result .. "Color3.new(" .. tostring(v) .. ")"
+        elseif typeof(v) == "Ray" then
+            local split = tostring(v):split('}, ')
+            local origin = split[1]:gsub('{', "Vector3.new("):gsub('}', ')')
+            local direction = split[2]:gsub('{', "Vector3.new("):gsub('}', ')')
+            result = result .. "Ray.new(" .. origin .. "), " .. direction .. ')'
+        elseif typeof(v) == "ColorSequence" then
+            result = result .. "ColorSequence.new(" .. dump_table(v.Keypoints) .. ')'
+        elseif typeof(v) == "ColorSequenceKeypoint" then
+            result = result .. "ColorSequenceKeypoint.new(" .. v.Time .. ", Color3.new(" .. tostring(v.Value) .. "))" 
         else
+            if type(v) == "userdata" then
+                print(typeof(v))
+            end
+            
             result = result .. tostring(v)
         end
         result = result .. ', '
@@ -90,13 +132,22 @@ local toscript = function(compact, remote, params)
         elseif tt == "number" then
             result = result .. v
         elseif typeof(v) == "Instance" then
-            result = result .. "game." .. v:GetFullName()
+            result = result .. transform_path(v:GetFullName())
         elseif typeof(v) == "Vector3" then
             result = result .. "Vector3.new(" .. tostring(v) .. ")"
         elseif typeof(v) == "CFrame" then
             result = result .. "CFrame.new(" .. tostring(v) .. ")"
         elseif typeof(v) == "Color3" then
             result = result .. "Color3.new(" .. tostring(v) .. ")"
+        elseif typeof(v) == "Ray" then
+            local split = tostring(v):split('}, ')
+            local origin = split[1]:gsub('{', "Vector3.new("):gsub('}', ')')
+            local direction = split[2]:gsub('{', "Vector3.new("):gsub('}', ')')
+            result = result .. "Ray.new(" .. origin .. "), " .. direction .. ')'
+        elseif typeof(v) == "ColorSequence" then
+            result = result .. "ColorSequence.new(" .. dump_table(v.Keypoints) .. ')'
+        elseif typeof(v) == "ColorSequenceKeypoint" then
+            result = result .. "ColorSequenceKeypoint.new(" .. v.Time .. ", Color3.new(" .. v.Value .. "))" 
         else
             result = result .. tostring(v)
         end
@@ -116,20 +167,24 @@ local toscript = function(compact, remote, params)
             if type(v) == "table" then
                 v = dump_table(v)
             elseif typeof(v) == "Instance" then
-                v = "game." .. v:GetFullName()
+                v = transform_path(v:GetFullName())
             elseif typeof(v) == "Vector3" then
                 v = "Vector3.new(" .. v .. ")"
             elseif typeof(v) == "CFrame" then
                 v = "CFrame.new(" .. v .. ")"
             elseif typeof(v) == "Color3" then
                 v = "Color3.new(" .. v .. ")"
+            elseif typeof(v) == "ColorSequence" then
+                v = "ColorSequence.new(" .. dump_table(v.Keypoints) .. ')'
+            elseif typeof(v) == "ColorSequenceKeypoint" then
+                v = "ColorSequenceKeypoint.new(" .. v.Time .. ", Color3.new(" .. v.Value .. "))" 
             end
 
             lresult = lresult .. tostring(v) .. ", "
         end
-        result = "game." .. remote:GetFullName() .. ':' .. method .. '(' .. lresult:sub(1, lresult:len() - 2) .. ')'
+        result = transform_path(remote:GetFullName()) .. ':' .. method .. '(' .. lresult:sub(1, lresult:len() - 2) .. ')'
     else
-        result = result .. "game." .. remote:GetFullName() .. ':' .. method .. '(' .. feed:sub(1, feed:len() - 2) .. ')'
+        result = result .. transform_path(remote:GetFullName()) .. ':' .. method .. '(' .. feed:sub(1, feed:len() - 2) .. ')'
     end
 
     return result
@@ -224,6 +279,21 @@ bind.Event:Connect(function(nmc, obj, ...)
     }
 
     if methods[nmc] and not ignore[obj] then
+
+        local guard = false
+        if hard_ignore[obj.Name] then
+            for i,v in next, vargs do
+                if type(hard_ignore[obj.Name][i]) == type(v) then
+                    guard = true
+                else
+                    guard = false
+                    return
+                end
+            end
+        end
+
+        if guard then return end
+
         local old_context = env.get_thread_context()
         env.set_thread_context(6)
 
