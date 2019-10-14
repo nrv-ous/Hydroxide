@@ -7,7 +7,7 @@
 # Hydroxide
 Penetration testing tool for games on the Roblox platform.
 
-<a href="https://github.com/nrv-ous/Hydroxide/blob/master/main.lua"><b>main.lua</b></a>
+## <a href="https://github.com/nrv-ous/Hydroxide/blob/master/main.lua"><b>main.lua</b></a>
 ```lua
 --[[
 
