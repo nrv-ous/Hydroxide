@@ -7,6 +7,7 @@
 # Hydroxide
 Penetration testing tool for games on the Roblox platform.
 
+##Script
 ```lua
 --[[
 
@@ -49,4 +50,5 @@ oh.assets = rbx_import(4055228005)
 web_import("vbazWPbt")
 web_import("cDnvTdbQ")
 
-oh.initialize()```
+oh.initialize()
+```
