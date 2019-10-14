@@ -43,7 +43,7 @@
 assert(not oh, "Hydroxide is already running!")
 
 local web_import = function(file)
-    return loadstring(game:HttpGetAsync("https://pastebin.com/raw/" .. file))()
+    return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/" .. file))()
 end
 
 local rbx_import = function(id)
@@ -51,13 +51,13 @@ local rbx_import = function(id)
 end
 
 getgenv().oh = {}
-oh.env = web_import("G1gKbzC3") 
-oh.aux = web_import("bevpgLpF")
+oh.env = web_import("environment.lua") 
+oh.aux = web_import("auxiliary.lua")
 oh.gui = rbx_import(4055219910)
 oh.assets = rbx_import(4055228005)
 
-web_import("vbazWPbt")
-web_import("cDnvTdbQ")
+web_import("visuals.lua")
+web_import("remote_spy.lua")
 
 oh.initialize()
 ```
