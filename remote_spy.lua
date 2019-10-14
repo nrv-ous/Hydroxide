@@ -22,29 +22,121 @@ local nmc = gmt.__namecall
     A U X I L I A R Y
 ]]--
 
--- Used to check if a specified object is actually a RemoteObject, if it is then it assigns a table to it.
-local is_remote = function(object)
-    local ran, is_remote = pcall(function()
-        return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")
-    end)
 
-    if ran and is_remote then
-        local remote_data = {
-            logs = 0, -- Amount of times the remote is called
-            logged = {}, -- Where parameters will be stored
-            ignored_args = {} -- Paramters in here will determine if the remote is logged or not
-        }
+local dump_table
+dump_table = function(t)
+    local result = "{ "
 
-        return remote_data 
+    for i,v in next, t do
+        if type(i) == "table" then
+            result = result .. '[' .. dump_table(i)
+        elseif type(i) == "string" then
+            if i:find("%A") then
+            result = result .. '["' .. i .. '"'
+            else
+            result = result .. i
+            end
+        elseif type(i) == "number" then
+        elseif typeof(i) == "Instance" then
+            result = result .. '[' .. ("game." .. i:GetFullName())
+        else
+            result = result .. '[' .. tostring(i)
+        end
+        result = result .. ((type(i) == "string" and ((i:find("%A") and "] = ") or " = ")) or (type(i) ~= "number" and '] = ') or "")
+
+        if type(v) == "table" then
+            result = result .. dump_table(v) 
+        elseif type(v) == "string" then
+            result = result .. '"' .. v .. '"'
+        elseif typeof(v) == "Instance" then
+            result = result .. ("game." .. v:GetFullName())
+        elseif typeof(v) == "Vector3" then
+            result = result .. "Vector3.new(" .. tostring(v) .. ")"
+        elseif typeof(v) == "CFrame" then
+            result = result .. "CFrame.new(" .. tostring(v) .. ")"
+        elseif typeof(v) == "Color3" then
+            result = result .. "Color3.new(" .. tostring(v) .. ")"
+        else
+            result = result .. tostring(v)
+        end
+        result = result .. ', '
     end
+
+    if result:sub(result:len() - 1, result:len()) == ", " then
+        result = result:sub(1, result:len() - 2)
+    end
+
+    return result .. " }"
 end
 
---[[
-    I N T E R F A C E
-]]--
+local toscript = function(compact, remote, params)
+    local result = ""
+    local method = ({
+        RemoteEvent = "FireServer",
+        RemoteFunction = "InvokeServer",
+        BindableEvent = "Fire",
+        BindableFunction = "Invoke"
+    })[remote.ClassName]
+
+    for i,v in next, params do
+        local tt = type(v)
+
+        result = result .. "local oh" .. i .. " = "
+
+        if tt == "table" then
+            result = result .. dump_table(v)
+        elseif tt == "string" then
+            result = result .. '"' .. v .. '"'
+        elseif tt == "number" then
+            result = result .. v
+        elseif typeof(v) == "Instance" then
+            result = result .. "game." .. v:GetFullName()
+        elseif typeof(v) == "Vector3" then
+            result = result .. "Vector3.new(" .. tostring(v) .. ")"
+        elseif typeof(v) == "CFrame" then
+            result = result .. "CFrame.new(" .. tostring(v) .. ")"
+        elseif typeof(v) == "Color3" then
+            result = result .. "Color3.new(" .. tostring(v) .. ")"
+        else
+            result = result .. tostring(v)
+        end
+
+        result = result .. '\n'
+    end
+
+    local feed = ""
+
+    for i = 1, #params do
+        feed = feed .. "oh" .. i .. ", "
+    end
+
+    if compact then
+        local lresult = ""
+        for i,v in next, params do
+            if type(v) == "table" then
+                v = dump_table(v)
+            elseif typeof(v) == "Instance" then
+                v = "game." .. v:GetFullName()
+            elseif typeof(v) == "Vector3" then
+                v = "Vector3.new(" .. v .. ")"
+            elseif typeof(v) == "CFrame" then
+                v = "CFrame.new(" .. v .. ")"
+            elseif typeof(v) == "Color3" then
+                v = "Color3.new(" .. v .. ")"
+            end
+
+            lresult = lresult .. tostring(v) .. ", "
+        end
+        result = "game." .. remote:GetFullName() .. ':' .. method .. '(' .. lresult:sub(1, lresult:len() - 2) .. ')'
+    else
+        result = result .. "game." .. remote:GetFullName() .. ':' .. method .. '(' .. feed:sub(1, feed:len() - 2) .. ')'
+    end
+
+    return result
+end
 
 -- Function used to visualize RemoteObject parameters
-local create_remote_data = function(parameters)
+local create_remote_data = function(remote, parameters)
     local container = assets.RemoteDataPod:Clone()
     container.Parent = inspect.Results
 
@@ -62,17 +154,22 @@ local create_remote_data = function(parameters)
 
         local parameter = assets.RemoteData:Clone()
         parameter.Icon.Image = "rbxassetid://" .. oh.icons[type(value)]
-        parameter.Label.Text = (typeof(v) == "Instance" and value.Name) or tostring(v)
+        parameter.Label.Text = (typeof(value) == "Instance" and value.Name) or tostring(value)
         parameter.Parent = container
 
         -- Change the size of the parameter's element to fit the literal value length
-        repeat
+        local increment = UDim2.new(0, 0, 0, 16)
+        parameter.Size = parameter.Size + increment
+        container.Size = container.Size + increment
+        inspect.Results.CanvasSize = inspect.Results.CanvasSize + increment
+
+        while not parameter.Label.TextFits do
             local increment = UDim2.new(0, 0, 0, 16)
             parameter.Size = parameter.Size + increment
             container.Size = container.Size + increment
             inspect.Results.CanvasSize = inspect.Results.CanvasSize + increment
             wait()
-        until parameter.Label.TextFits
+        end
 
         -- If a __tostring method was found, then reset it to avoid detection
         if __tostring then
@@ -81,94 +178,44 @@ local create_remote_data = function(parameters)
         end
     end
 
+    container.MouseButton1Click:Connect(function()
+        env.to_clipboard(toscript(false, remote, parameters))
+    end)
+
     aux.apply_highlight(container)
 end
 
--- Log any remote that has just been recently stored
-setmetatable(remotes, { __newindex = function(t, remote, remote_data)
-    if not is_remote(remote) then return end
 
-    local class_logs = window[remote.ClassName]
-    local log = assets.RemoteObject:Clone()
-
-    log.Name = remote.Name
-    log.Parent = class_logs
-    log.Label.Text = remote.Name
-    log.Icon.Image = "rbxassetid://" .. oh.icons[remote.ClassName]
-
-    class_logs.CanvasSize = class_logs.CanvasSize + UDim2.new(0, 0, 0, 25)
-
-    log.Inspect.MouseButton1Click:Connect(function()
-        local old_context = env.get_thread_context()
-        env.set_thread_context(6)
-
-        -- If the newly selected remote is not the previous, then change the previously logged parameters to the current ones
-        if selected_remote ~= remote then
-            -- Remove any old logged parameters
-            for i, parameter in next, inspect.Results:GetChildren() do
-                if not parameter:IsA("UIListLayout") then
-                    parameter:Destroy()
-                end
-            end
-
-            -- Reset the canvas size
-            inspect.Results.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-            -- Create new parameter logs for the current remote
-            for i, parameters in next, remotes[remote].logged do
-                create_remote_data(parameters)
-            end
-        end
-
-        -- Set the text of the inspection label to the current remote's name
-        local label = inspect.Remote.Label
-        label.Text = log.Name
-        label.Size = UDim2.new(0, -(label.TextBoundsX + 5), 0, 25)
-        label.Position = UDim2.new(0, -(label.TextBoundsX + 10), 0, 25)
-        inspect.Remote.Icon.Position = UDim2.new(-(label.TextBounds.X + 35), 0, 0)
-
-        body.TabsLabel.Text = "  RemoteSpy : Inspection"
-
-        -- Change the currently selected extension to the inspection tab
-        inspect.Visible = true
-        oh.selected_extension.Visible = false
-        oh.selected_extension = inspection
-        selected_remote = remote
-
-        env.set_thread_context(old_context)
+local is_remote = function(object)
+    local ran, result = pcall(function()
+        return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")
     end)
 
-    -- ignore/spy
-    log.Toggle.MouseButton1Click:Connect(function() 
-        local old_context = env.get_thread_context()
-        env.set_thread_context(6)
-
-        ignore[remote] = not ignore[remote]
-
-        if ignore[remote] then
-            local anim = tween_service:Create(log.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(100, 100, 100)})
-            anim:Play()
-            asset.Toggle.Text = "Spy"
-            inspect.Toggle.Text = "Spy"
-        else
-            local anim = tween_service:Create(log.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(200, 200, 200)})
-            anim:Play()
-            asset.Toggle.Text = "Spy"
-            inspect.Toggle.Text = "Spy"
-        end
-
-        env.set_thread_context(old_context)
-    end)
-end})
+    return (ran and (result and {logs = 0, logged = {}})) or nil
+end
 
 --[[
     C O R E 
 ]]--
 
--- The infamous namecall hook :flushed:
-setreadonly(gmt, false)
-gmt.__namecall = env.new_cclosure(function(object, ...) 
-    local vargs = {...}    
+game.DescendantRemoving:Connect(function(object)
+    local old_context = env.get_thread_context()
+    env.set_thread_context(6)
+
+    if not object:IsDescendantOf(game) and remotes[object] then
+        print("destroyed " .. object.Name)
+        local logs = window[object.ClassName]
+        remotes[object].window:Destroy()
+        remotes[object] = nil
+        logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
+    end
+
+    env.set_thread_context(old_context)
+end)
+
+local bind = Instance.new("BindableEvent")
+bind.Event:Connect(function(nmc, obj, ...)
+    local vargs = {...}
     local methods = {
         FireServer = true,
         InvokeServer = true,
@@ -176,54 +223,117 @@ gmt.__namecall = env.new_cclosure(function(object, ...)
         Invoke = true
     }
 
-    -- Check if a remote method has been called, and if it is then check if it's not being ignored
-    if methods[env.get_namecall()] and not ignore[object] then 
+    if methods[nmc] and not ignore[obj] then
         local old_context = env.get_thread_context()
         env.set_thread_context(6)
 
-        -- If the remote was not stored, then store it
-        if not remotes[object] then
-            remotes[object] = is_remote(object) 
-        end
+        if not remotes[obj] then
+            remotes[obj] = is_remote(obj)
+            local asset = assets.RemoteObject:Clone()
+            local b_toggle = asset.Toggle
+            local b_inspect = asset.Inspect
+            remotes[obj].window = asset
+            local logs = window[obj.ClassName]
+            asset.Name = obj.Name
+            asset.Parent = logs
+            asset.Label.Text = obj.Name
+            asset.Icon.Image = "rbxassetid://" .. oh.icons[obj.ClassName]
+            logs.CanvasSize = logs.CanvasSize + UDim2.new(0, 0, 0, 25)
         
-        local remote = remotes[object]
-
-        -- If we are currently viewing the remote, then log the call
-        if selected_remote == object then
-            create_remote_data(vargs)
+            aux.apply_highlight(b_toggle)
+            aux.apply_highlight(b_inspect)
+            b_toggle.AutoButtonColor = false
+            b_inspect.AutoButtonColor = false
+        
+            b_toggle.MouseButton1Click:Connect(function()
+                local old_context = env.get_thread_context()
+                env.set_thread_context(6)
+                ignore[obj] = not ignore[obj]
+        
+                if ignore[obj] then
+                    local anim = tween_service:Create(asset.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(100, 100, 100)})
+                    anim:Play()
+                    asset.Toggle.Text = "Spy"
+                    inspect.Toggle.Text = "Spy"
+                else
+                    local anim = tween_service:Create(asset.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(200, 200, 200)})
+                    anim:Play()
+                    asset.Toggle.Text = "Ignore"
+                    inspect.Toggle.Text = "Ignore"
+                end
+        
+                env.set_thread_context(old_context)
+            end)
+        
+            b_inspect.MouseButton1Click:Connect(function()
+                local old_context = env.get_thread_context()
+                env.set_thread_context(6)
+        
+                if selected_remote ~= obj then
+                    for i,v in next, inspect.Results:GetChildren() do
+                        if not v:IsA("UIListLayout") then
+                            v:Destroy()
+                        end
+                    end
+        
+                    inspect.Results.CanvasSize = UDim2.new(0, 0, 0, 0)
+        
+                    for i,v in next, remotes[obj].logged do
+                        create_remote_data(obj, v)
+                    end
+                end
+        
+                local remote = inspect.Remote
+                local label = remote.Label
+                label.Text = asset.Name
+        
+                label.Size = UDim2.new(0, label.TextBounds.X + 5, 0, 25)
+                label.Position = UDim2.new(1, -(label.TextBounds.X + 10), 0, 0)
+                remote.Icon.Position = UDim2.new(1, -(label.TextBounds.X + 35), 0, 0)
+        
+                body.TabsLabel.Text = "  RemoteSpy : inspect"
+        
+                inspect.Visible = true
+                oh.selected_extension.Visible = false
+                oh.selected_extension = inspect
+                selected_remote = obj
+        
+                env.set_thread_context(old_context)
+            end)
+        
+            obj:GetPropertyChangedSignal("Parent"):Connect(function()
+                if not obj:IsDescendantOf(game) then
+                    asset:Destroy()
+                    remotes[object] = nil
+                    logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
+                end
+            end)
         end
 
-        -- Put remote call in storage
-        table.insert(remote.logged, vargs)
+        local remote = remotes[obj]
 
-        -- Count how many times the remote has been called
+        if selected_remote == obj then
+            create_remote_data(obj, vargs)
+        end
+
+        table.insert(remote.logged, vargs)
         remote.logs = remote.logs + 1
-        remote.window.Count.Text = (remote.Logs <= 999 and remote.Logs) or "..." -- If the call exceeds 999, then change the text to an ellipsis
+        remote.window.Count.Text = (remote.logs <= 999 and remote.logs) or "..."
 
         env.set_thread_context(old_context)
-    end 
-
-    return nmc(object, ...)
-end)
-
-game.DescendantRemoving:Connect(function(object) 
-    local old_context = env.get_thread_context()
-    env.set_thread_context(6)
-
-    if not object:IsDescendantOf(game) and remotes[object] then
-        local logs = window[object.ClassName]
-        local window = remotes[object].window
-
-        logs.CanvasSize = logs.CanvasSize - window.Size
-        window:Destroy()
-        remotes[object] = nil
     end
-
-    env.set_thread_context(old_context)
 end)
+
+setreadonly(gmt, false)
+gmt.__namecall = newcclosure(function(obj, ...)
+    bind:Fire(env.get_namecall(), obj, ...)
+    return nmc(obj, ...)
+end)
+
+getgenv().remotes = remotes
 
 --[[
-    I N T E R F A C E 
+    I N T E R F A C E   F U N C T I O N S
 ]]--
 
 -- RemoteObject selection & visual detail
@@ -273,7 +383,6 @@ for i, option in next, options:GetChildren() do
         end)
     end
 end
-
 -- Ignore/Spy button inside the inspector
 inspect.Toggle.MouseButton1Click:Connect(function() 
     local old_context = env.get_thread_context()
@@ -305,8 +414,8 @@ inspect.Clear.MouseButton1Click:Connect(function()
     remote.window.Count.Text = "0"
 
     for i, result in next, inspect.Results:GetChildren() do
-        if not v:IsA("UIListLayout") then
-            v:Destroy()
+        if not result:IsA("UIListLayout") then
+            result:Destroy()
         end
     end
 
