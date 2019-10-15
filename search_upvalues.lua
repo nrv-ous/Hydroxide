@@ -1,13 +1,15 @@
-local search_upvalues = {}
-
-local env = oh.environment
-
+local aux = oh.aux
+local env = oh.env
 local gui = oh.gui
-local assets = oh.assets
 
 local body = gui.Base.Body
 local window = body.Tabs.SearchUpvalues
 
+local upvalues = {}
+
+--[[
+    A U X I L I A R Y
+]]--
 
 local find_upvalues = function(value)
     local results = {}
@@ -26,10 +28,41 @@ local find_upvalues = function(value)
     return result
 end
 
-search_upvalues.prefix = "su"
+--[[
+    I N T E R F A C E
+]]--
 
-search_upvalues.scan = function(value)
+window.Query.FocusLost:Connect(function(returned)
+    if returned then
+        upvalues = find_upvalues(window.Query.Text)
+        for i,v in next, upvalues do
+            local asset = assets.Function:Clone()
+            asset.Label.Text = tostring(i)
     
-end
+            for k,x in next, v do
+                local upvalue = assets.Upvalue:Clone()
+                upvalue.Parent = asset
+                asset.Size = asset.Size + UDim2.new(0, 0, 0, 25)
+            end
+    
+            asset.Parent = window.Results
+            window.Results.CanvasSize = window.Results.CanvasSize + UDim2.new(0, 0, 0, asset.AbsoluteSize.Y)
+        end
+    
+        window.Query.Text = ""
 
-return search_upvalues
+        spawn(function()
+            while  do
+                for i,v in next, upvalues do
+                    for k,x in next, v do
+                        if env.get_upvalue(i, k) ~= x then
+                            
+                        end
+                    end
+                end
+
+                wait()
+            end
+        end)
+    end
+end)
