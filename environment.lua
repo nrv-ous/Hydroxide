@@ -15,7 +15,8 @@ local environment = {
     is_x_closure = is_synapse_function or is_protosmasher_closure or false,
     hook_function = hookfunction or hookfunc or false,
     new_cclosure = newcclosure or false,
-    to_clipboard = (syn and syn.write_clipboard) or writeclipboard or toclipboard or setclipboard or false
+    to_clipboard = (syn and syn.write_clipboard) or writeclipboard or toclipboard or setclipboard or false,
+    check_caller = checkcaller or false,
 }
 
 -- Checks if the exploit has the currently listed functions
