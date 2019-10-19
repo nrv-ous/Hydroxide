@@ -22,21 +22,21 @@
 
 assert(not oh, "Hydroxide is already running!")
 
-local web_import = function(file)
-    return loadstring(game:HttpGetAsync("https://pastebin.com/raw/" .. file))()
-end
-
-local rbx_import = function(id)
-    return game:GetObjects("rbxassetid://" .. id)[1]
+local import = function(toimport)
+	if type(toimport) == "string" then
+		return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/" .. toimport))()
+	else 
+		return game:GetObjects("rbxassetid://" .. toimport)[1]
+	end
 end
 
 getgenv().oh = {}
-oh.env = web_import("G1gKbzC3") 
-oh.aux = web_import("bevpgLpF")
-oh.gui = rbx_import(4055219910)
-oh.assets = rbx_import(4055228005)
+oh.env = import("G1gKbzC3") 
+oh.aux = import("bevpgLpF")
+oh.gui = import(4055219910)
+oh.assets = import(4055228005)
 
-web_import("vbazWPbt")
-web_import("cDnvTdbQ")
+import("vbazWPbt")
+import("cDnvTdbQ")
 
 oh.initialize()
