@@ -31,12 +31,12 @@ local import = function(toimport)
 end
 
 getgenv().oh = {}
-oh.env = import("G1gKbzC3") 
-oh.aux = import("bevpgLpF")
+oh.env = import("environment.lua") 
+oh.aux = import("auxiliary.lua")
 oh.gui = import(4055219910)
 oh.assets = import(4055228005)
 
-import("vbazWPbt")
-import("cDnvTdbQ")
+import("visuals.lua")
+import("remote_spy.lua")
 
 oh.initialize()
