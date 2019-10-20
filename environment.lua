@@ -8,7 +8,6 @@ local environment = {
     get_gc = getgc or false,
     get_thread_context = (syn and syn.get_thread_identity) or getthreadcontext or getcontext or false,
     set_thread_context = (syn and syn.set_thread_identity) or setthreadcontext or setcontext or false,
-    set_namecall = setnamecallmethod or false,
     set_upvalue = debug.setupvalue or setupvalue or setupval or false,
     set_readonly = setreadonly or make_writeable or false,
     is_l_closure = islclosure or (iscclosure and function(closure) return not iscclosure(closure) end) or false,
