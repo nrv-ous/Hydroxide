@@ -228,7 +228,9 @@ remotes.new = function(remote)
     remote_data.logs = {}
     remote_data.ignored = false
     remote_data.blocked = false
-    remote_data.ignored_params = {}
+    remote_data.ignored_params = {
+        "GlobalReplicate"
+    }
     remote_data.blocked_params = {}
     remote_data.window = remotes.make_window(remote)
 
@@ -551,6 +553,7 @@ for i,option in next, menu.remote_log:GetChildren() do
     end
 end
 
+local condition_type = add_condition.Types.String
 for i,v in next, add_condition.Types:GetChildren() do
     if v:IsA("Frame") then
         v.Toggle.MouseButton1Click:Connect(function()
