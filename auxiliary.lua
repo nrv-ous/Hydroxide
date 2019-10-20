@@ -27,7 +27,12 @@ aux.transform_path = function(path)
     result = result:gsub("Players." .. name, "LocalPlayer")
     result = result:gsub("Players[\"" .. name .. "\"]", "LocalPlayer")
     
-    return "game." .. result:sub(1, result:len() - 1)
+    local game_prefix = "game."
+    if result:sub(1, 1) == '[' then
+        game_prefix = "game"
+    end
+
+    return game_prefix .. result:sub(1, result:len() - 1)
 end
 
 aux.transform_value = function(value)
@@ -86,9 +91,9 @@ aux.dump_table = function(table)
         if result:sub(result:len() - 1, result:len()) == ", " then
             result = result:sub(1, result:len() - 2)
         end
-
-        return result .. " }"
     end
+
+    return result .. " }"
 end
 
 -- Adds a highlight effect to the specified element
