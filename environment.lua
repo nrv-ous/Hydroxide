@@ -20,8 +20,21 @@ local environment = {
 }
 
 -- Checks if the exploit has the currently listed functions
-for i,v in next, environment do
-    assert(v, "Your exploit does not support Hydroxide!")
+do
+    local supported = true
+    local string_to_error = "Your exploit does not support Hydroxide! Needed functions:"
+
+    for i,v in next, environment do
+        if not v then -- If exploit doesn't have function, add name to string
+            supported = false
+            string_to_error = string_to_error .. " " .. i .. ","
+        end
+    end
+    
+    if not supported then 
+        string_to_error = string_to_error:sub(1, -2) -- Remove trailing comma
+        error(string_to_error, 3)
+    end
 end
 
 oh.icons = {
