@@ -1,4 +1,4 @@
-local aux = oh.aux
+local aux = oh.auxiliary
 
 local base = oh.gui.Base
 local drag = base.Drag

@@ -38,20 +38,21 @@ do
 end
 
 oh.icons = {
-    BindableEvent = 4035066852,
-    BindableFunction = 4035067356,
-    RemoteEvent = 4035067858,
-    RemoteFunction = 4035068333,
-    string = 3285671510,
-    number = 3285671510,
-    boolean = 3285671510,
-    table = 3285651068,
-    ["function"] = 3285661880,
-    userdata = 3285664726
+    BindableEvent = "rbxassetid://4035066852",
+    BindableFunction = "rbxassetid://4035067356",
+    RemoteEvent = "rbxassetid://4035067858",
+    RemoteFunction = "rbxassetid://4035068333",
+    string = "rbxassetid://3285671510",
+    number = "rbxassetid://3285671510",
+    boolean = "rbxassetid://3285671510",
+    table = "rbxassetid://3285651068",
+    ["function"] = "rbxassetid://3285661880",
+    userdata = "rbxassetid://3285664726"
 }
 
 oh.initialize = function()
     oh.gui.Parent = game:GetService("CoreGui")
+    oh.running = true
 end
 
 return environment
