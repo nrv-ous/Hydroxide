@@ -551,6 +551,7 @@ for i,option in next, menu.remote_log:GetChildren() do
     end
 end
 
+local condition_type = add_condition.Types.String
 for i,v in next, add_condition.Types:GetChildren() do
     if v:IsA("Frame") then
         v.Toggle.MouseButton1Click:Connect(function()
