@@ -468,7 +468,7 @@ end)
 
 env.set_readonly(gmt, false)
 
-gmt.__namecall = function(obj, ...)
+gmt.__namecall = env.new_cclosure(function(obj, ...)
     local old = env.get_thread_context()
     local vargs = {...}
     env.set_thread_context(6)
@@ -488,7 +488,7 @@ gmt.__namecall = function(obj, ...)
     env.set_thread_context(old)
 
     return nmc(obj, ...)
-end
+end)
 
 env.set_readonly(gmt, true)
 
