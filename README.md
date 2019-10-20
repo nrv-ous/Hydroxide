@@ -40,7 +40,7 @@
                       this is a hassle to edit.
 ]]--
 
-assert(not oh, "Hydroxide is already running!")
+assert(not oh or oh.running, "Hydroxide is already running!")
 
 local import = function(toimport)
 	if type(toimport) == "string" then
