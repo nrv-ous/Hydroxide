@@ -359,6 +359,8 @@ remotes.new = function(remote)
                 events.conditions = nil
             end
     
+            inspect.Toggle.Text = (remote_data.ignored and "Spy") or "Ignore"
+
             events.ignore = inspect.Toggle.MouseButton1Click:Connect(remote_data.ignore)
             events.clear = inspect.Clear.MouseButton1Click:Connect(remote_data.clear)
             events.conditions = inspect.Conditions.MouseButton1Click:Connect(function()
