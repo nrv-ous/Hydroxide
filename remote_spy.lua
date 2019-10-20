@@ -1,485 +1,502 @@
-local env = oh.env
-local aux = oh.aux
-local assets = oh.assets
-
-local gui = oh.gui
-local base = gui.Base
-local body = base.Body
-local tabs = body.Tabs
-local window = tabs.RemoteSpy
-local inspect = tabs.RemoteSpyInspection
-local options = window.Options
-
-local drop_down = gui.RSDropdown
-local idrop_down = gui.RSIDropdown
-
-local selected_remote 
-local selected_option = "RemoteEvent"
-local blocked = {}
-local removed = {}
-local remotes = {}
-local ignore = {}
-
-local drop_down_events = {
-    remote_spy = {},
-    inspection = {}
-}
-
-local hard_ignore = { -- hard-coded ignore
-    CharacterSoundEvent = {
-        "boolean",
-        "boolean"
-    }
-}
-
-local blocked_args = {}
-
 local tween_service = game:GetService("TweenService")
 local client = game:GetService("Players").LocalPlayer
 local mouse = client:GetMouse()
 
+local aux = oh.auxiliary
+local env = oh.environment
+
+local gui = oh.gui
+local assets = oh.assets
+
+local base = gui.Base
+local menu = {
+    inspect = gui.RSIDropdown,
+    remote_log = gui.RSDropdown
+}
+
+local body = base.Body
+local tabs = body.Tabs
+local window = tabs.RemoteSpy
+local options = window.Options
+local inspect = tabs.RemoteSpyInspection
+local conditions = tabs.RemoteSpyConditions
+
+local remotes = {
+    cache = {},
+    hard_ignore = {
+        {"CharacterSoundEvent", {
+            "boolean",
+            "boolean"
+        }},
+        {"CharacterSoundEvent", {
+            "string"
+        }}
+    }
+}
+local drop_down = {}
+local events = {}
+
 local gmt = env.get_metatable(game)
 local nmc = gmt.__namecall
+local idx = gmt.__index
 
---[[
-    A U X I L I A R Y
-]]--
+local hook_to = {
+    Instance.new("RemoteEvent").FireServer,
+    Instance.new("RemoteFunction").InvokeServer,
+    Instance.new("BindableEvent").Fire,
+    Instance.new("BindableFunction").Invoke
+}
 
-local transform_path = function(raw)
-    local split = raw:split('.')
-    local result = ""
-    
-    if #split == 1 and not game:FindFirstChild(split[1]) then
-        return split[1] .. " --[[ Parent is \"nil\" or object is destroyed ]]"
-    end
-    
-    for i,v in next, split do
-        if v:find("%A") then
-            result = result:sub(1, result:len() - 1)
-            v = "[\"" .. v .. "\"]"
+-- C O R E
+local make_params = function(remote, parameters)
+    local results = inspect.Results
+    local params = assets.RemoteDataPod:Clone()
+    params.Parent = results
+
+    for i,parameter in next, parameters do
+        local __tostring 
+        local meta_table = env.get_metatable(v)
+        local method = meta_table and meta_table.__tostring
+
+        if method then
+            __tostring = method
+            env.set_readonly(meta_table, false)
+            meta_table.__tostring = nil
         end
-        
-        result = result .. v .. "."
+
+        local element = assets.RemoteData:Clone()
+        element.Icon.Image = oh.icons[type(parameter)]
+        element.Label.Text = (typeof(parameter) == "Instance" and parameter.Name) or tostring(parameter)
+        element.Parent = params
+
+        local increment = UDim2.new(0, 0, 0, 16)
+        params.Size = params.Size + increment
+        results.CanvasSize = results.CanvasSize + increment
+
+        while not element.Label.TextFits do
+            element.Size = element.Size + increment
+            params.Size = params.Size + increment
+            results.CanvasSize = results.CanvasSize + increment
+            wait()
+        end
+
+        if __tostring then
+            meta_table.__tostring = __tostring
+            env.set_readonly(meta_table, true)
+        end
     end
-    
-    result = result:gsub("Players.LocalPlayer." .. game:GetService("Players").LocalPlayer.Name, "LocalPlayer")
-    result = result:gsub("Players.LocalPlayer[\"" .. game:GetService("Players").LocalPlayer.Name .. "\"]", "LocalPlayer")
-    
-    return "game." .. result:sub(1, result:len() - 1)
+
+    params.MouseButton2Click:Connect(function()
+        local old = env.get_thread_context()
+        env.set_thread_context(6)
+
+        drop_down.inspect(params, remote, parameters)
+
+        env.set_thread_context(old)
+    end)
+
+    aux.apply_highlight(params, nil, nil, true)
 end
 
-local dump_table
-dump_table = function(t)
-    local result = "{ "
-
-    for i,v in next, t do
-        if type(i) == "table" then
-            result = result .. '[' .. dump_table(i)
-        elseif type(i) == "string" then
-            if i:find("%A") then
-            result = result .. '["' .. i .. '"'
-            else
-            result = result .. i
-            end
-        elseif type(i) == "number" then
-        elseif typeof(i) == "Instance" then
-            result = result .. '[' .. transform_path(i:GetFullName())
-        else
-            result = result .. '[' .. tostring(i)
-        end
-        result = result .. ((type(i) == "string" and ((i:find("%A") and "] = ") or " = ")) or (type(i) ~= "number" and '] = ') or "")
-
-        if type(v) == "table" then
-            result = result .. dump_table(v) 
-        elseif type(v) == "string" then
-            result = result .. '"' .. v .. '"'
-        elseif typeof(v) == "Instance" then
-            result = result .. transform_path(v:GetFullName())
-        elseif typeof(v) == "Vector3" then
-            result = result .. "Vector3.new(" .. tostring(v) .. ")"
-        elseif typeof(v) == "CFrame" then
-            result = result .. "CFrame.new(" .. tostring(v) .. ")"
-        elseif typeof(v) == "Color3" then
-            result = result .. "Color3.new(" .. tostring(v) .. ")"
-        elseif typeof(v) == "Ray" then
-            local split = tostring(v):split('}, ')
-            local origin = split[1]:gsub('{', "Vector3.new("):gsub('}', ')')
-            local direction = split[2]:gsub('{', "Vector3.new("):gsub('}', ')')
-            result = result .. "Ray.new(" .. origin .. "), " .. direction .. ')'
-        elseif typeof(v) == "ColorSequence" then
-            result = result .. "ColorSequence.new(" .. dump_table(v.Keypoints) .. ')'
-        elseif typeof(v) == "ColorSequenceKeypoint" then
-            result = result .. "ColorSequenceKeypoint.new(" .. v.Time .. ", Color3.new(" .. tostring(v.Value) .. "))" 
-        else
-            if type(v) == "userdata" then
-                print(typeof(v))
-            end
-            
-            result = result .. tostring(v)
-        end
-        result = result .. ', '
-    end
-
-    if result:sub(result:len() - 1, result:len()) == ", " then
-        result = result:sub(1, result:len() - 2)
-    end
-
-    return result .. " }"
-end
-
-local toscript = function(compact, remote, params)
+local to_script = function(remote, parameters)
     local result = ""
     local method = ({
         RemoteEvent = "FireServer",
-        RemoteFunction = "InvokeServer",
+        RemoteFunction = "InvekeServer",
         BindableEvent = "Fire",
         BindableFunction = "Invoke"
     })[remote.ClassName]
 
-    for i,v in next, params do
-        local tt = type(v)
-
+    for i,value in next, parameters do
         result = result .. "local oh" .. i .. " = "
-
-        if tt == "table" then
-            result = result .. dump_table(v)
-        elseif tt == "string" then
-            result = result .. '"' .. v .. '"'
-        elseif tt == "number" then
-            result = result .. v
-        elseif typeof(v) == "Instance" then
-            result = result .. transform_path(v:GetFullName())
-        elseif typeof(v) == "Vector3" then
-            result = result .. "Vector3.new(" .. tostring(v) .. ")"
-        elseif typeof(v) == "CFrame" then
-            result = result .. "CFrame.new(" .. tostring(v) .. ")"
-        elseif typeof(v) == "Color3" then
-            result = result .. "Color3.new(" .. tostring(v) .. ")"
-        elseif typeof(v) == "Ray" then
-            local split = tostring(v):split('}, ')
-            local origin = split[1]:gsub('{', "Vector3.new("):gsub('}', ')')
-            local direction = split[2]:gsub('{', "Vector3.new("):gsub('}', ')')
-            result = result .. "Ray.new(" .. origin .. "), " .. direction .. ')'
-        elseif typeof(v) == "ColorSequence" then
-            result = result .. "ColorSequence.new(" .. dump_table(v.Keypoints) .. ')'
-        elseif typeof(v) == "ColorSequenceKeypoint" then
-            result = result .. "ColorSequenceKeypoint.new(" .. v.Time .. ", Color3.new(" .. v.Value .. "))" 
-        else
-            result = result .. tostring(v)
-        end
-
-        result = result .. '\n'
+        result = result .. aux.transform_value(value).. '\n'
     end
 
-    local feed = ""
+    local call_params = ""
 
-    for i = 1, #params do
-        feed = feed .. "oh" .. i .. ", "
+    for i = 1, #parameters do
+        call_params = call_params .. "oh" .. i .. ", "
     end
 
-    return result .. transform_path(remote:GetFullName()) .. ':' .. method .. '(' .. feed:sub(1, feed:len() - 2) .. ')'
+    return result .. aux.transform_path(remote:GetFullName()) .. ':' .. method .. '(' .. call_params:sub(1, call_params:len() - 2) .. ')'
 end
-
-local inspect_dropdown = function(container, remote, parameters)
-    local events = drop_down_events.inspection
-    for i,v in next, events do
-        v:Disconnect()
-    end
-    idrop_down.Position = UDim2.new(0, mouse.X + 10, 0, mouse.Y + 10)
-    idrop_down.Visible = true
-
-    events.GenerateScript = idrop_down.Script.MouseButton1Click:Connect(function()
-        env.to_clipboard(toscript(false, remote, parameters))
-    end)
-
-    -- calling script
-    -- calling function
-
-    events.Remove = idrop_down:FindFirstChild("Remove").MouseButton1Click:Connect(function()
-        inspect.Results.CanvasSize = inspect.Results.CanvasSize - UDim2.new(0, 0, 0, container.AbsoluteSize.Y)
-        container:Destroy()
-    end)
-
-    events.Ignore = idrop_down.Ignore.MouseButton1Click:Connect(function()
-        
-    end)
-
-    events.Block = idrop_down.Block.MouseButton1Click:Connect(function()
-        
-    end)
-end
-
--- Function used to visualize RemoteObject parameters
-local create_remote_data = function(remote, parameters)
-    local container = assets.RemoteDataPod:Clone()
-    container.Parent = inspect.Results
-
-    for i, value in next, parameters do
-        -- Method to prevent the __tostring method from detecting Hydroxide
-        local __tostring 
-        local metatable = env.get_metatable(v)
-        local method = metatable and metatable.__tostring
-
-        if method then
-            __tostring = method
-            env.set_readonly(metatable, false)
-            metatable.__tostring = nil
-        end
-
-        local parameter = assets.RemoteData:Clone()
-        parameter.Icon.Image = "rbxassetid://" .. oh.icons[type(value)]
-        parameter.Label.Text = (typeof(value) == "Instance" and value.Name) or tostring(value)
-        parameter.Parent = container
-
-        -- Change the size of the parameter's element to fit the literal value length
-        local increment = UDim2.new(0, 0, 0, 16)
-        container.Size = container.Size + increment
-        inspect.Results.CanvasSize = inspect.Results.CanvasSize + increment
-
-        while not parameter.Label.TextFits do
-            local increment = UDim2.new(0, 0, 0, 16)
-            parameter.Size = parameter.Size + increment
-            container.Size = container.Size + increment
-            inspect.Results.CanvasSize = inspect.Results.CanvasSize + increment
-            wait()
-        end
-
-        -- If a __tostring method was found, then reset it to avoid detection
-        if __tostring then
-            metatable.__tostring = __tostring
-            env.set_readonly(metatable, true)
-        end
-    end
-
-    container.MouseButton2Click:Connect(function()
-        inspect_dropdown(container, remote, parameters)
-    end)
-
-    aux.apply_highlight(container, nil, nil, true)
-end
-
 
 local is_remote = function(object)
-    local ran, result = pcall(function()
-        return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction")
-    end)
-
-    return (ran and (result and {logs = 0, logged = {}})) or nil
+    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction") 
 end
 
-local display_dropdown = function(remote)
-    local events = drop_down_events.remote_spy
-    for i,v in next, events do
-        v:Disconnect()
+drop_down.inspect = function(container, remote, parameters)
+    local results = inspect.Results
+
+    menu.inspect.Position = UDim2.new(0, mouse.X + 10, 0, mouse.Y + 10)
+    menu.inspect.Visible = true
+
+    if events.igen_script and events.iremove then
+        events.igen_script:Disconnect()
+        events.iremove:Disconnect()
+
+        events.igen_script = nil
+        events.iremove = nil
     end
 
-    drop_down.Position = UDim2.new(0, mouse.X + 10, 0, mouse.Y + 10)
-    drop_down.Visible = true
-
-    drop_down.Block.Text = (blocked[remote] and "Unblock") or "Block"
-    drop_down.Ignore.Text = (ignore[remote] and "Spy") or "Ignore"
-
-    events.Block = drop_down.Block.MouseButton1Click:Connect(function()
-        blocked[remote] = not blocked[remote]
-        local window = remotes[remote].window
-        
-        if blocked[remote] then
-            local anim = tween_service:Create(window.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(150, 0, 0)})
-            anim:Play()
-        else
-            local anim = tween_service:Create(window.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(200, 200, 200)})
-            anim:Play()
-        end
+    events.igen_script = menu.inspect.Script.MouseButton1Click:Connect(function()
+        env.to_clipboard(to_script(remote, parameters))
     end)
 
-    events.Ignore = drop_down.Ignore.MouseButton1Click:Connect(function()
-        ignore[remote] = not ignore[remote]
-        local window = remotes[remote].window
-        
-        if ignore[remote] then
-            local anim = tween_service:Create(window.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(100, 100, 100)})
-            anim:Play()
-            inspect.Toggle.Text = "Spy"
-        else
-            local anim = tween_service:Create(window.Label, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(200, 200, 200)})
-            anim:Play()
-            inspect.Toggle.Text = "Ignore"
-        end
-    end)
-
-    events.Clear = drop_down.Clear.MouseButton1Click:Connect(function()
-        local old_context = env.get_thread_context()
-        env.set_thread_context(6)
-
-        local remote = remotes[remote]
-        remote.logs = 0
-        remote.window.Count.Text = "0"
-
-        for i, result in next, inspect.Results:GetChildren() do
-            if not result:IsA("UIListLayout") then
-                result:Destroy()
-            end
-        end
-
-        remote.logged = {}
-        inspect.Results.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-        env.set_thread_context(old_context)
-    end)
-
-    events.Remove = drop_down:FindFirstChild("Remove").MouseButton1Click:Connect(function()
-        ignore[remote] = true
-        remotes[remote].window:Destroy()
-        remotes[remote] = nil
-
-        inspect.Results.CanvasSize = inspect.Results.CanvasSize - UDim2.new(0, 0, 0, 25)
+    events.iremove = menu.inspect:FindFirstChild("Remove").MouseButton1Click:Connect(function()
+        results.CanvasSize = results.CanvasSize - UDim2.new(0, 0, 0, container.AbsoluteSize.Y)
+        container:Destroy()
     end)
 end
 
---[[
-    C O R E 
-]]--
+drop_down.remote_log = function(remote)
+    local remote_log = menu.remote_log
+    local remote_data = remotes.cache[remote]
+    local window = remote_data.window
+    
+    if events.rblock and events.rignore and events.rclear and events.rremove and events.rconditions then
+        events.rblock:Disconnect()
+        events.rignore:Disconnect()
+        events.rclear:Disconnect()
+        events.rremove:Disconnect()
+        events.rconditions:Disconnect()
 
-game.DescendantRemoving:Connect(function(object)
-    local old_context = env.get_thread_context()
+        events.rblock = nil
+        events.rignore = nil
+        events.rclear = nil
+        events.rremove = nil
+        events.rconditions = nil
+    end
+
+    events.rblock = remote_log.Block.MouseButton1Click:Connect(remote_data.block)
+    events.rignore = remote_log.Ignore.MouseButton1Click:Connect(remote_data.ignore)
+    events.rclear = remote_log.Clear.MouseButton1Click:Connect(remote_data.clear)
+    events.rremove = remote_log:FindFirstChild("Remove").MouseButton1Click:Connect(function()
+        remote_data.ignore = true
+        window.Parent.CanvasSize = window.Parent.CanvasSize - UDim2.new(0, 0, 0, 25)
+        window:Destroy()
+        remote_data.window = nil
+    end)
+    events.rconditions = remote_log.Conditions.MouseButton1Click:Connect(function()
+        conditions.Visible = true
+        oh.selected_extension.Visible = false
+        oh.selected_extension = conditions
+    end)
+
+    remote_log.Position = UDim2.new(0, mouse.X + 5, 0, mouse.Y + 5)
+    remote_log.Visible = true
+
+    remote_log.Block.Text = (remote_data.blocked and "Unblock") or "Block"
+    remote_log.Ignore.Text = (remote_data.ignored and "Spy") or "Ignore"
+end
+
+remotes.make_window = function(remote)
+    local log = assets.RemoteObject:Clone()
+    local class = remote.ClassName
+    local log_window = window[class]
+
+    log.Name = remote.Name
+    log.Label.Text = remote.Name
+    log.Icon.Image = oh.icons[class]
+    log.Parent = log_window
+
+    log_window.CanvasSize = log_window.CanvasSize + UDim2.new(0, 0, 0, 25)
+
+    return log
+end
+
+remotes.new = function(remote)
+    if remotes.cache[remote] then
+        return remotes.cache[remote]
+    end
+
+    local remote_data = {}
+    remote_data.calls = 0
+    remote_data.logs = {}
+    remote_data.ignored = false
+    remote_data.blocked = false
+    remote_data.ignored_params = {}
+    remote_data.blocked_params = {}
+    remote_data.window = remotes.make_window(remote)
+
+    remote_data.check_params = function(params)
+        for i,parameter in next, params do
+            local class = type(parameter)
+
+            if class == "table" or class == "userdata" or class == "function" then
+                parameter = class
+            end
+
+            for k, parameters in next, remote_data.ignored_params do
+                if parameters[i] == parameter then
+                    return "ignored"
+                end
+            end
+
+            for k, parameters in next, remote_data.blocked_params do
+                if parameters[i] == parameter then
+                    return "blocked"
+                end
+            end
+        end
+    end
+
+    remote_data.update = function(parameters)
+        remote_data.window.Count.Text = tostring(remote_data.calls)
+        table.insert(remote_data.logs, parameters)
+        
+        if remotes.selected == remote then
+            make_params(remote, parameters)
+        end
+    end
+
+    remote_data.block = function()
+        local old = env.get_thread_context()
+        env.set_thread_context(6)
+
+        local color 
+        local blocked = Color3.fromRGB(150, 0, 0)
+        local unblocked = Color3.fromRGB(200, 200, 200)
+
+        remote_data.blocked = not remote_data.blocked
+        
+        if remote_data.ignored then
+            blocked = Color3.fromRGB(0, 0, 0)
+            unblocked = Color3.fromRGB(100, 100, 100)
+        end
+
+        if remote_data.blocked then
+            color = blocked
+        else
+            color = unblocked
+        end
+
+        local animation = tween_service:Create(remote_data.window.Label, TweenInfo.new(0.1), {TextColor3 = color})
+        animation:Play()
+
+        env.set_thread_context(old)
+    end
+
+    remote_data.clear = function()
+        local old = env.get_thread_context()
+        env.set_thread_context(6)
+
+        local results = inspect.Results
+        remote_data.logs = {}
+        remote_data.calls = 0
+        remote_data.window.Count.Text = "0"
+
+        if remotes.selected == remote then
+            for i, result in next, results:GetChildren() do
+                if not result:IsA("UIListLayout") then
+                    result:Destroy()
+                end
+            end
+
+            results.CanvasSize = UDim2.new(0, 0, 0, 0)
+        end
+
+        env.set_thread_context(old)
+    end
+
+    remote_data.ignore = function()
+        local old = env.get_thread_context()
+        env.set_thread_context(6)
+
+        local text
+        local color 
+        local ignored = Color3.fromRGB(100, 100, 100)
+        local spy = Color3.fromRGB(200, 200, 200)
+
+        remote_data.ignored = not remote_data.ignored
+        
+        if remote_data.blocked then
+            ignored = Color3.fromRGB(0, 0, 0)
+            spy = Color3.fromRGB(150, 0, 0)
+        end
+
+        if remote_data.ignored then
+            color = ignored
+            text = "Spy"
+        else
+            color = spy
+            text = "Ignore"
+        end
+
+        local animation = tween_service:Create(remote_data.window.Label, TweenInfo.new(0.1), {TextColor3 = color})
+        animation:Play()
+
+        inspect.Toggle.Text = text
+
+        env.set_thread_context(old)
+    end
+
+    remote_data.window.MouseButton1Click:Connect(function()
+        local old = env.get_thread_context()
+        env.set_thread_context(6)
+
+        if remotes.selected ~= remote then
+            local results = inspect.Results
+            for i, result in next, results:GetChildren() do
+                if not result:IsA("UIListLayout") then
+                    result:Destroy()
+                end
+            end
+
+            results.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+            for i, log in next, remote_data.logs do
+                make_params(remote, log)
+            end
+
+            if events.ignore and events.clear and events.conditions then
+                events.ignore:Disconnect()
+                events.clear:Disconnect()
+                events.conditions:Disconnect()
+    
+                events.ignore = nil
+                events.clear = nil
+                events.conditions = nil
+            end
+    
+            events.ignore = inspect.Toggle.MouseButton1Click:Connect(remote_data.ignore)
+            events.clear = inspect.Clear.MouseButton1Click:Connect(remote_data.clear)
+            events.conditions = inspect.Conditions.MouseButton1Click:Connect(function()
+                conditions.Visible = true
+                oh.selected_extension.Visible = false
+                oh.selected_extension = conditions
+            end)
+        end
+
+        local label = inspect.Remote.Label
+        label.Text = remote.Name
+        label.Size = UDim2.new(0, label.TextBounds.X + 5, 0, 25)
+        label.Position = UDim2.new(1, -(label.TextBounds.X + 10), 0, 0)
+        
+        inspect.Remote.Icon.Position = UDim2.new(1, -(label.TextBounds.X + 35), 0, 0)
+
+        body.TabsLabel.Text = "  RemoteSpy : Inspection"
+
+        inspect.Visible = true
+        oh.selected_extension.Visible = false
+        oh.selected_extension = inspect
+        remotes.selected = remote
+
+        env.set_thread_context(old)
+    end)
+
+    remote_data.window.MouseButton2Click:Connect(function()
+        local old = env.get_thread_context()
+        env.set_thread_context(6)
+
+        drop_down.remote_log(remote)
+
+        env.set_thread_context(old)
+    end)
+
+    remotes.cache[remote] = remote_data
+    return remote_data
+end
+
+-- H O O K I N G
+local is_ignored = function(remote, args)
+    local ignore = false
+
+    for i,ignored in next, remotes.hard_ignore do
+        local remote_name = ignored[1]
+        local ignored_args = ignored[2]
+
+        if remote.Name == remote_name then
+            for k, arg in next, ignored_args do
+                if arg == typeof(args[k]) then
+                    ignore = true
+                else
+                    return false
+                end
+            end
+        end
+    end
+
+    return ignore
+end
+
+for remote_index = 1, #hook_to do
+    local hook 
+    hook = env.hook_function(hook_to[remote_index], env.new_cclosure(function(remote, ...)
+        local old = env.get_thread_context()
+        local vargs = {...}
+
+        env.set_thread_context(6)
+
+        if env.check_caller() or is_ignored(remote.Name, vargs) then
+            return hook(remote, ...)
+        end
+
+        local remote_data = remotes.cache[remote] or remotes.new(remote)
+
+        if remote_data.ignored or remote_data.check_params(vargs) == "ignored" then
+            return hook(remote, ...)
+        elseif remote_data.blocked or remote_data.check_params(vargs) == "blocked" then
+            return nil
+        end
+
+        remote_data.calls = remote_data.calls + 1
+        remote_data.update(vargs)
+
+        env.set_thread_context(old)
+
+        return hook(remote, ...)
+    end))
+end
+
+
+local namecall = Instance.new("BindableFunction")
+namecall.OnInvoke = env.new_cclosure(function(remote, vargs)
+    local remote_data = remotes.cache[remote] or remotes.new(remote)
+
+    if remote_data.blocked or remote_data.check_params(vargs) == "blocked" then
+        return remote_data
+    end
+
+    remote_data.calls = remote_data.calls + 1
+    remote_data.update(vargs)
+
+    return remote_data
+end)
+
+env.set_readonly(gmt, false)
+
+gmt.__namecall = function(obj, ...)
+    local old = env.get_thread_context()
+    local vargs = {...}
     env.set_thread_context(6)
 
-    if not object:IsDescendantOf(game) and remotes[object] then
-        print("destroyed " .. object.Name)
-        local logs = window[object.ClassName]
-        remotes[object].window:Destroy()
-        remotes[object] = nil
-        logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
-    end
-
-    env.set_thread_context(old_context)
-end)
-
-local bind = Instance.new("BindableEvent")
-bind.Event:Connect(function(nmc, obj, ...)
-    local vargs = {...}
-    local methods = {
-        FireServer = true,
-        InvokeServer = true,
-        Fire = true,
-        Invoke = true
-    }
-
-    if methods[nmc] and not ignore[obj] then
-        local guard = false
-        if hard_ignore[obj.Name] then
-            for i,v in next, vargs do
-                if type(hard_ignore[obj.Name][i]) == type(v) then
-                    guard = true
-                else
-                    guard = false
-                    return
-                end
-            end
+    if is_remote(obj) then
+        if env.check_caller() or is_ignored(obj.Name, vargs) then
+            return nmc(obj, ...)
         end
 
-        if guard then return end
+        local remote_data = namecall:Invoke(obj, vargs)
 
-        local old_context = env.get_thread_context()
-        env.set_thread_context(6)
-
-        if not remotes[obj] then
-            remotes[obj] = is_remote(obj)
-            local asset = assets.RemoteObject:Clone()
-            remotes[obj].window = asset
-            local logs = window[obj.ClassName]
-            asset.Name = obj.Name
-            asset.Parent = logs
-            asset.Label.Text = obj.Name
-            asset.Icon.Image = "rbxassetid://" .. oh.icons[obj.ClassName]
-            logs.CanvasSize = logs.CanvasSize + UDim2.new(0, 0, 0, 25)
-        
-            asset.MouseButton1Click:Connect(function()
-                local old_context = env.get_thread_context()
-                env.set_thread_context(6)
-        
-                if selected_remote ~= obj then
-                    for i,v in next, inspect.Results:GetChildren() do
-                        if not v:IsA("UIListLayout") then
-                            v:Destroy()
-                        end
-                    end
-        
-                    inspect.Results.CanvasSize = UDim2.new(0, 0, 0, 0)
-        
-                    for i,v in next, remotes[obj].logged do
-                        create_remote_data(obj, v)
-                    end
-                end
-        
-                local remote = inspect.Remote
-                local label = remote.Label
-                label.Text = asset.Name
-        
-                label.Size = UDim2.new(0, label.TextBounds.X + 5, 0, 25)
-                label.Position = UDim2.new(1, -(label.TextBounds.X + 10), 0, 0)
-                remote.Icon.Position = UDim2.new(1, -(label.TextBounds.X + 35), 0, 0)
-        
-                body.TabsLabel.Text = "  RemoteSpy : inspect"
-        
-                inspect.Visible = true
-                oh.selected_extension.Visible = false
-                oh.selected_extension = inspect
-                selected_remote = obj
-        
-                env.set_thread_context(old_context)
-            end)
-
-            asset.MouseButton2Click:Connect(function()
-                display_dropdown(obj)
-            end)
-        
-            obj:GetPropertyChangedSignal("Parent"):Connect(function()
-                if not obj:IsDescendantOf(game) then
-                    asset:Destroy()
-                    remotes[object] = nil
-                    logs.CanvasSize = logs.CanvasSize - UDim2.new(0, 0, 0, 25)
-                end
-            end)
+        if remote_data.blocked or remote_data.check_params(vargs) == "blocked" then
+            return remote_data
         end
-
-        local remote = remotes[obj]
-
-        if selected_remote == obj then
-            create_remote_data(obj, vargs)
-        end
-
-        table.insert(remote.logged, vargs)
-        remote.logs = remote.logs + 1
-        remote.window.Count.Text = (remote.logs <= 999 and remote.logs) or "..."
-
-        env.set_thread_context(old_context)
     end
-end)
 
-setreadonly(gmt, false)
-gmt.__namecall = newcclosure(function(obj, ...)
-    bind:Fire(env.get_namecall(), obj, ...)
-
-    if blocked[obj] then
-        return
-    end
+    env.set_thread_context(old)
 
     return nmc(obj, ...)
-end)
+end
 
-getgenv().remotes = remotes
+env.set_readonly(gmt, true)
 
---[[
-    I N T E R F A C E   F U N C T I O N S
-]]--
-
--- RemoteObject selection & visual detail
+-- E V E N T S
+remotes.selected_option = options.RemoteEvent
 for i, option in next, options:GetChildren() do
     if option:IsA("TextButton") then
         option.MouseButton1Click:Connect(function()
-            local old = window[selected_option]
-            local old_anim = tween_service:Create(options[selected_option], TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
+            local old = window[remotes.selected_option.Name]
+            local old_anim = tween_service:Create(options[remotes.selected_option.Name], TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
             local new_anim = tween_service:Create(option, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
         
             old.Visible = false
@@ -488,77 +505,35 @@ for i, option in next, options:GetChildren() do
             window[option.Name].Visible = true
             new_anim:Play()
 
-            selected_option = option.Name
-            inspect.Remote.Icon.Image = "rbxassetid://" .. oh.icons[selected_option]
+            remotes.selected_option = option
+            inspect.Remote.Icon.Image = oh.icons[remotes.selected_option.Name]
         end)
 
-        aux.apply_highlight(option, Color3.fromRGB(40, 40, 40), Color3.fromRGB(40, 40, 40), false, selected_option ~= option.Name)
+        aux.apply_highlight(option, Color3.fromRGB(40, 40, 40), Color3.fromRGB(40, 40, 40), false, selected_option ~= option)
     end
 end
-
-getgenv().events = drop_down_events
 
 mouse.Button1Up:Connect(function()
-    drop_down.Visible = false
-    idrop_down.Visible = false
+    menu.inspect.Visible = false
+    menu.remote_log.Visible = false
 end)
 
-for i,v in next, drop_down:GetChildren() do
-    if v:IsA("TextButton") then
-        v.MouseButton1Click:Connect(function()
-            drop_down.Visible = false
+for i,option in next, menu.inspect:GetChildren() do
+    if option:IsA("TextButton") then
+        option.MouseButton1Click:Connect(function()
+            menu.inspect.Visible = false
         end)
 
-        aux.apply_highlight(v)
+        aux.apply_highlight(option)
     end
 end
 
-for i,v in next, idrop_down:GetChildren() do
-    if v:IsA("TextButton") then
-        v.MouseButton1Click:Connect(function()
-            idrop_down.Visible = false
+for i,option in next, menu.remote_log:GetChildren() do
+    if option:IsA("TextButton") then
+        option.MouseButton1Click:Connect(function()
+            menu.remote_log.Visible = false
         end)
 
-        aux.apply_highlight(v)
+        aux.apply_highlight(option)
     end
 end
-
--- Ignore/Spy button inside the inspector
-inspect.Toggle.MouseButton1Click:Connect(function() 
-    local old_context = env.get_thread_context()
-    env.set_thread_context(6)
-
-    ignore[selected_remote] = not ignore[selected_remote]
-
-    local remote = remotes[selected_remote]
-    if ignore[selected_remote] then
-        inspect.Toggle.Text = "Spy"
-        remote.window.Label.TextColor3 = Color3.fromRGB(100, 100, 100)
-    else
-        inspect.Toggle.Text = "Ignore"
-        remote.window.Label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    end
-
-    env.set_thread_context(old_context)
-end)
-
--- Clear button inside the inspector
-inspect.Clear.MouseButton1Click:Connect(function()
-    local old_context = env.get_thread_context()
-    env.set_thread_context(6)
-
-    local remote = remotes[selected_remote]
-    remote.logs = 0
-    remote.window.Count.Text = "0"
-
-    for i, result in next, inspect.Results:GetChildren() do
-        if not result:IsA("UIListLayout") then
-            result:Destroy()
-        end
-    end
-
-    remotes[selected_remote].logged = {}
-    inspect.Results.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-    env.set_thread_context(old_context)
-end)
