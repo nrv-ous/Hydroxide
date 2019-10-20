@@ -42,6 +42,11 @@ user_input.InputChanged:Connect(function(input)
 	end
 end)
 
+close.MouseButton1Click:Connect(function()
+	body.Visible = not body.Visible
+end)
+
+base.BackgroundTransparency = 1 -- No white background when closing
 aux.apply_highlight(close, Color3.fromRGB(200, 0, 0), Color3.fromRGB(200, 100, 100))
 
 local titles = {
