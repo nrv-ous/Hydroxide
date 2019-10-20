@@ -81,7 +81,7 @@ aux.dump_table = function(table)
             result = result .. " = "
         end
 
-        result = result .. transform_value(value) .. ', '
+        result = result .. aux.transform_value(value) .. ', '
 
         if result:sub(result:len() - 1, result:len()) == ", " then
             result = result:sub(1, result:len() - 2)
