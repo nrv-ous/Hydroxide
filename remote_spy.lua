@@ -242,7 +242,7 @@ remotes.new = function(remote)
     end
 
     remote_data.update = function(parameters)
-        remote_data.window.Count.Text = tostring(remote_data.calls)
+        remote_data.window.Count.Text = (remote_data.calls <= 999 and remote_data.calls) or "..."
         table.insert(remote_data.logs, parameters)
         
         if remotes.selected == remote then
