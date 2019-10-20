@@ -22,11 +22,11 @@
 
 assert(not oh or oh.running, "Hydroxide is already running!")
 
-local import = function(toimport)
+local import = function(file)
 	if type(toimport) == "string" then
-		return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/" .. toimport))()
+		return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/" .. file))()
 	else 
-		return game:GetObjects("rbxassetid://" .. toimport)[1]
+		return game:GetObjects("rbxassetid://" .. file)[1]
 	end
 end
 
