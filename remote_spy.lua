@@ -102,7 +102,7 @@ local to_script = function(remote, parameters)
     local result = ""
     local method = ({
         RemoteEvent = "FireServer",
-        RemoteFunction = "InvekeServer",
+        RemoteFunction = "InvokeServer",
         BindableEvent = "Fire",
         BindableFunction = "Invoke"
     })[remote.ClassName]
