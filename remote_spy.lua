@@ -24,13 +24,7 @@ local conditions = tabs.RemoteSpyConditions
 local remotes = {
     cache = {},
     hard_ignore = {
-        {"CharacterSoundEvent", {
-            "boolean",
-            "boolean"
-        }},
-        {"CharacterSoundEvent", {
-            "string"
-        }}
+        CharacterSoundEvent = true
     }
 }
 local drop_down = {}
@@ -402,7 +396,7 @@ end
 local is_ignored = function(remote, args)
     local ignore = false
 
-    for i,ignored in next, remotes.hard_ignore do
+    --[[for i,ignored in next, remotes.hard_ignore do
         local remote_name = ignored[1]
         local ignored_args = ignored[2]
 
@@ -415,9 +409,9 @@ local is_ignored = function(remote, args)
                 end
             end
         end
-    end
+    end]]
 
-    return ignore
+    return remotes.hard_ignore[remote.Name] -- ignore
 end
 
 for remote_index = 1, #hook_to do
