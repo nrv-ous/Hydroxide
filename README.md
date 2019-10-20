@@ -12,52 +12,17 @@
 <p align="center">
   Penetration testing tool for games on the Roblox platform.
 </p>
+<p align="center">
+  Warning: Hydroxide is not complete. Currently the only working feature is the RemoteSpy. Please report bugs at the <a href="https://discord.gg/KKpsYDK">Discord server</a> or make a GitHub issue.
+</p>
+<p align="center">
+  Join the <a href="https://discord.gg/KKpsYDK">Discord server</a> for up-to-date news about Hydroxide!
+</p>
 
-
-
-## <a href="https://github.com/nrv-ous/Hydroxide/blob/master/main.lua"><b>main.lua</b></a>
-
+## Script
 ```lua
---[[
-
-                ▄████████▄   ▄█▄    ▄█▄   
-                ███    ███   ███    ███   
-                ███    ███   ███    ███   
-                ███    ███   ████▄▄████  ▄███▄▄▄▄███▄ 
-                ███    ███   ████▀▀████  ▀███▀▀▀▀███▀  
-                ███    ███   ███    ███   
-                ███    ███   ███    ███   
-                ▀████████▀   ▀█▀    ▀█▀    
-
-
-                      :::[H:Y:D:R:O:X:I:D:E]:::
-                   -- developed by nrv-ous/hush --   
-    
-    Welcome to Hydroxide, the most superior script development
-     tool as of 10/12/19. Feel free to browse the source code, 
-    and make any changes. Hydroxide utilizes a module structure 
-    for organization and cleanliness, so my apologies if any of 
-                      this is a hassle to edit.
-]]--
-
-assert(not oh or oh.running, "Hydroxide is already running!")
-
-local import = function(toimport)
-    if type(toimport) == "string" then
-        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/" .. toimport))()
-    else 
-        return game:GetObjects("rbxassetid://" .. toimport)[1]
-    end
-end
-
-getgenv().oh = {}
-oh.gui = import(4055219910)
-oh.assets = import(4055228005)
-oh.environment = import("environment.lua") 
-oh.auxiliary = import("auxiliary.lua")
-
-import("visuals.lua")
-import("remote_spy.lua")
-
-oh.initialize()
+loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/main.lua"))()
 ```
+<p align="center">
+  This is the recommended way of executing Hydroxide as it will automatically update. This loads the code at <a href="https://github.com/nrv-ous/Hydroxide/blob/master/main.lua">main.lua</a>.
+</p>
