@@ -21,6 +21,8 @@ local options = window.Options
 local inspect = tabs.RemoteSpyInspection
 local conditions = tabs.RemoteSpyConditions
 
+local add_condition = conditions.AddCondition
+
 local remotes = {
     cache = {},
     hard_ignore = {
@@ -59,6 +61,7 @@ local make_params = function(remote, parameters)
         local method = meta_table and meta_table.__tostring
 
         if method then
+            print(method)
             __tostring = method
             env.set_readonly(meta_table, false)
             meta_table.__tostring = nil
@@ -119,6 +122,16 @@ local to_script = function(remote, parameters)
     end
 
     return result .. aux.transform_path(remote:GetFullName()) .. ':' .. method .. '(' .. call_params:sub(1, call_params:len() - 2) .. ')'
+end
+
+local compare_tables = function(args, params)
+    for i,v in next, args do
+        if v ~= params[i] then
+            return false
+        end
+    end
+
+    return true
 end
 
 local is_remote = function(object)
@@ -219,26 +232,24 @@ remotes.new = function(remote)
     remote_data.blocked_params = {}
     remote_data.window = remotes.make_window(remote)
 
-    remote_data.check_params = function(params)
-        for i,parameter in next, params do
-            local class = type(parameter)
-
-            if class == "table" or class == "userdata" or class == "function" then
-                parameter = class
-            end
-
-            for k, parameters in next, remote_data.ignored_params do
-                if parameters[i] == parameter then
-                    return "ignored"
-                end
-            end
-
-            for k, parameters in next, remote_data.blocked_params do
-                if parameters[i] == parameter then
-                    return "blocked"
-                end
+    remote_data.is_ignored = function(params)
+        for i,ignored_params in next, remote_data.ignored_params do
+            if compare_tables(ignored_params, params) then
+                return true
             end
         end
+
+        return false
+    end
+
+    remote_data.is_blocked = function(params)
+        for i,blocked_params in next, remote_data.blocked_params do
+            if compare_tables(blocked_params, params) then
+                return true
+            end
+        end
+
+        return false
     end
 
     remote_data.update = function(parameters)
@@ -401,7 +412,7 @@ remotes.new = function(remote)
 end
 
 -- H O O K I N G
-local is_ignored = function(remote, args)
+local hard_ignored = function(remote, args)
     local ignore = false
 
     for i,ignored in next, remotes.hard_ignore do
@@ -431,15 +442,15 @@ for remote_index = 1, #hook_to do
 
         env.set_thread_context(6)
 
-        if env.check_caller() or is_ignored(remote, vargs) then
+        if env.check_caller() or hard_ignored(remote, vargs) then
             return hook(remote, ...)
         end
 
         local remote_data = remotes.cache[remote] or remotes.new(remote)
 
-        if remote_data.ignored or remote_data.check_params(vargs) == "ignored" then
+        if remote_data.ignored or remote_data.is_ignored(vargs) then
             return hook(remote, ...)
-        elseif remote_data.blocked or remote_data.check_params(vargs) == "blocked" then
+        elseif remote_data.blocked or remote_data.is_blocked(vargs) then
             return nil
         end
 
@@ -456,7 +467,7 @@ local namecall = Instance.new("BindableFunction")
 namecall.OnInvoke = env.new_cclosure(function(remote, vargs)
     local remote_data = remotes.cache[remote] or remotes.new(remote)
 
-    if remote_data.blocked or remote_data.check_params(vargs) == "blocked" then
+    if remote_data.blocked or remote_data.ignored or remote_data.is_ignored(vargs) or remote_data.is_blocked(vargs) then
         return remote_data
     end
 
@@ -474,14 +485,14 @@ gmt.__namecall = env.new_cclosure(function(obj, ...)
     env.set_thread_context(6)
 
     if is_remote(obj) then
-        if env.check_caller() or is_ignored(obj, vargs) then
+        if env.check_caller() or hard_ignored(obj, vargs) then
             return nmc(obj, ...)
         end
 
         local remote_data = namecall:Invoke(obj, vargs)
 
-        if remote_data.blocked or remote_data.check_params(vargs) == "blocked" then
-            return remote_data
+        if remote_data.blocked or remote_data.is_blocked(vargs) then
+            return nil
         end
     end
 
@@ -537,5 +548,15 @@ for i,option in next, menu.remote_log:GetChildren() do
         end)
 
         aux.apply_highlight(option)
+    end
+end
+
+for i,v in next, add_condition.Types:GetChildren() do
+    if v:IsA("Frame") then
+        v.Toggle.MouseButton1Click:Connect(function()
+            condition_type.Toggle.Image = "rbxassetid://4137040743" 
+            v.Toggle.Image = "rbxassetid://4136986319"
+            condition_type = v
+        end)
     end
 end
