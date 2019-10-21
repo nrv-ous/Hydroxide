@@ -14,11 +14,17 @@ aux.transform_path = function(path)
     if #split == 1 and not game:FindFirstChild(split[1]) then
         return split[1] .. " --[[ Parent is \"nil\" or object is destroyed ]]"
     end
+
+    if pcall(game.GetService, game, split[1]) then
+        split[1] = "GetService(\"" .. split[1] .. "\")"
+    end
     
     for i,v in next, split do
-        if v:find("%A") then
-            result = result:sub(1, result:len() - 1)
+        if (v:sub(1, 1):match("%W") or v:find("%W")) and not v:find("GetService") then
+            result = result:sub(1, result:len())
             v = "[\"" .. v .. "\"]"
+        elseif v:find("GetService") then
+            v = ':' .. v
         else
             v = '.' .. v
         end
@@ -26,12 +32,11 @@ aux.transform_path = function(path)
         result = result .. v
     end
     
-    result = result:gsub("Players." .. name, "LocalPlayer")
-    result = result:gsub("Players[\"" .. name .. "\"]", "LocalPlayer")
+    result = result:gsub("GetService(\"Players\")." .. name, "GetService(\"Players\").LocalPlayer")
+    result = result:gsub("GetService(\"Players\")[\"" .. name .. "\"]", "GetService(\"Players\").LocalPlayer")
 
-    return "game." .. result:sub(1, result:len() - 1)
+    return "game" .. result
 end
-  
 aux.transform_value = function(value)
     local result = ""
     local ttype = typeof(value)
