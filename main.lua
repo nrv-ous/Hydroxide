@@ -38,5 +38,6 @@ oh.auxiliary = import("auxiliary.lua")
 
 import("visuals.lua")
 import("remote_spy.lua")
+import("upvalue_scanner.lua")
 
 oh.initialize()
