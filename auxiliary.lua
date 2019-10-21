@@ -7,7 +7,6 @@ local tween_service = game:GetService("TweenService")
 local client = players.LocalPlayer
 
 aux.transform_path = function(path)
-	local game_prefix = "game."
     local split = path:split('.')
     local result = ""
     local name = client.Name
@@ -30,11 +29,7 @@ aux.transform_path = function(path)
     result = result:gsub("Players." .. name, "LocalPlayer")
     result = result:gsub("Players[\"" .. name .. "\"]", "LocalPlayer")
 
-    if result:sub(1, 1) == '[' then
-        game_prefix = "game"
-    end
-
-    return game_prefix .. result:sub(1, result:len() - 1)
+    return "game." .. result:sub(1, result:len() - 1)
 end
   
 aux.transform_value = function(value)
