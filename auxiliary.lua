@@ -67,7 +67,7 @@ aux.transform_value = function(value)
             print(ttype)
         end
         
-        result = result .. tostring(v)
+        result = result .. tostring(value)
     end
 
     return result
