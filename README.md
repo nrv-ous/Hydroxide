@@ -13,10 +13,10 @@
   Penetration testing tool for games on the Roblox platform.
 </p>
 <p align="center">
-  Warning: Hydroxide is not complete. Currently the only working feature is the RemoteSpy. Please report bugs at the <a href="https://discord.gg/KKpsYDK">Discord server</a> or make a GitHub issue.
+  Join the <a href="https://discord.gg/KKpsYDK">Discord server</a> for up-to-date news about Hydroxide!
 </p>
 <p align="center">
-  Join the <a href="https://discord.gg/KKpsYDK">Discord server</a> for up-to-date news about Hydroxide!
+  Warning: Hydroxide is not complete. Currently the only working feature is the RemoteSpy. Please report bugs at the Discord server or make a GitHub issue.
 </p>
 
 ## Script
