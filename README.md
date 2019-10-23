@@ -16,7 +16,7 @@
   Join the <a href="https://discord.gg/KKpsYDK">Discord server</a> for up-to-date news about Hydroxide!
 </p>
 <p align="center">
-  Warning: Hydroxide is not complete. Currently the only working feature is the RemoteSpy. Please report bugs at the Discord server or make a GitHub issue.
+  Warning: Hydroxide is not complete. Please report bugs at the Discord server or make a GitHub issue.
 </p>
 
 ## Script
