@@ -8,6 +8,7 @@ local environment = {
     get_gc = getgc or false,
     get_thread_context = (syn and syn.get_thread_identity) or getthreadcontext or getcontext or false,
     set_thread_context = (syn and syn.set_thread_identity) or setthreadcontext or setcontext or false,
+    set_namecall = setnamecallmethod or false,
     set_upvalue = debug.setupvalue or setupvalue or setupval or false,
     set_readonly = setreadonly or make_writeable or false,
     is_l_closure = islclosure or (iscclosure and function(closure) return not iscclosure(closure) end) or false,
@@ -19,21 +20,8 @@ local environment = {
 }
 
 -- Checks if the exploit has the currently listed functions
-do
-    local supported = true
-    local string_to_error = "Your exploit does not support Hydroxide! Needed functions:"
-
-    for i,v in next, environment do
-        if not v then -- If exploit doesn't have function, add name to string
-            supported = false
-            string_to_error = string_to_error .. " " .. i .. ","
-        end
-    end
-    
-    if not supported then 
-        string_to_error = string_to_error:sub(1, -2) -- Remove trailing comma
-        error(string_to_error, 3)
-    end
+for i,v in next, environment do
+    assert(v, "Your exploit does not support Hydroxide!")
 end
 
 oh.icons = {

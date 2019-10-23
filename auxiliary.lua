@@ -14,83 +14,95 @@ aux.transform_path = function(path)
     if #split == 1 and not game:FindFirstChild(split[1]) then
         return split[1] .. " --[[ Parent is \"nil\" or object is destroyed ]]"
     end
+
+    if pcall(game.GetService, game, split[1]) then
+        split[1] = "GetService(\"" .. split[1] .. "\")"
+    end
     
     for i,v in next, split do
-        if v:find("%A") then
-            result = result:sub(1, result:len() - 1)
+        if (v:sub(1, 1):match("%W") or v:find("%W")) and not v:find("GetService") then
+            result = result:sub(1, result:len())
             v = "[\"" .. v .. "\"]"
+        elseif v:find("GetService") then
+            v = ':' .. v
+        else
+            v = '.' .. v
         end
         
-        result = result .. v .. "."
+        result = result .. v
     end
     
-    result = result:gsub("Players." .. name, "LocalPlayer")
-    result = result:gsub("Players[\"" .. name .. "\"]", "LocalPlayer")
-    
-    local game_prefix = "game."
-    if result:sub(1, 1) == '[' then
-        game_prefix = "game"
-    end
+    result = result:gsub("GetService(\"Players\")." .. name, "GetService(\"Players\").LocalPlayer")
+    result = result:gsub("GetService(\"Players\")[\"" .. name .. "\"]", "GetService(\"Players\").LocalPlayer")
 
-    return game_prefix .. result:sub(1, result:len() - 1)
+    return "game" .. result
 end
-
 aux.transform_value = function(value)
-    local origin 
-    local direction
-    local type = typeof(value)
-
-    if type == "Ray" then
-        local split = tostring(value):split("}, ")
-        origin = split[1]:gsub('{', "Vector3.new("):gsub('}', ')')
-        direction = split[2]:gsub('{', "Vector3.new("):gsub('}', ')')
+    local result = ""
+    local ttype = typeof(value)
+  
+    if ttype == "table" then
+        result = result .. aux.dump_table(value) 
+    elseif ttype == "string" then
+        result = result .. '"' .. value .. '"'
+    elseif ttype == "Instance" then
+        result = result .. aux.transform_path(value:GetFullName())
+    elseif ttype == "Vector3" then
+        result = result .. "Vector3.new(" .. tostring(value) .. ")"
+    elseif ttype == "CFrame" then
+        result = result .. "CFrame.new(" .. tostring(value) .. ")"
+    elseif ttype == "Color3" then
+        result = result .. "Color3.new(" .. tostring(value) .. ")"
+    elseif ttype == "Ray" then
+        local split = tostring(value):split('}, ')
+        local origin = split[1]:gsub('{', "Vector3.new("):gsub('}', ')')
+        local direction = split[2]:gsub('{', "Vector3.new("):gsub('}', ')')
+        result = result .. "Ray.new(" .. origin .. "), " .. direction .. ')'
+    elseif ttype == "ColorSequence" then
+        result = result .. "ColorSequence.new(" .. dump_table(v.Keypoints) .. ')'
+    elseif ttype == "ColorSequenceKeypoint" then
+        result = result .. "ColorSequenceKeypoint.new(" .. value.Time .. ", Color3.new(" .. tostring(value.Value) .. "))" 
+    else
+        if type(value) == "userdata" then
+            print(ttype)
+        end
+        
+        result = result .. tostring(value)
     end
 
-    local transformations = {
-        string = type == "string" and '"' .. value .. '"',
-        table = type == "table" and aux.dump_table(value),
-        Instance = type == "Instance" and aux.transform_path(value:GetFullName()),
-        Vector3 = type == "Vector3" and "Vector3.new(" .. tostring(value) .. ')',
-        CFrame = type == "CFrame" and "CFrame.new(" .. tostring(value) .. ')',
-        Color3 = type == "Color3" and "Color3.new(" .. tostring(value) .. ')',
-        Ray = type == "Ray" and "Ray.new(" .. origin .. "), " .. direction .. ')',
-        ColorSequence = type == "ColorSequence" and "ColorSequence.new(" .. aux.dump_table(v.KeyPoints) .. ')',
-        ColorSequenceKeypoint = type == "ColorSequenceKeypoint" and "ColorSequenceKeypoint.new(" .. v.Time .. ", Color3.new(" .. tostring(v.Value) .. "))",
-    }
-
-    return transformations[typeof(value)] or tostring(value)
+    return result
 end
 
-aux.dump_table = function(table)
+aux.dump_table = function(t)
     local result = "{ "
 
-    for index, value in next, table do
-        local class = type(index)
+    for i,v in next, t do
+      local class = typeof(index)
 
-        if class == "table" then
-            result = result .. '[' .. aux.dump_table(index) .. ']'
-        elseif class == "string" then
-            if index:find("%A") then
-                result = result .. "[\"" .. index .. "\"]"
-            else
-                result = result .. index
-            end
-        elseif class == "number" then
-        elseif class == "Instance" then
-            result = result .. '[' .. aux.transform_path(index:GetFullName()) .. ']'
-        else
-            result = result .. tostring(index)
-        end
+      if class == "table" then
+          result = result .. '[' .. aux.dump_table(index) .. ']'
+      elseif class == "string" then
+          if index:find("%A") then
+              result = result .. "[\"" .. index .. "\"]"
+          else
+              result = result .. index
+          end
+      elseif class == "number" then
+      elseif class == "Instance" then
+          result = result .. '[' .. aux.transform_path(index:GetFullName()) .. ']'
+      elseif class ~= "nil" then
+          result = result .. tostring(index)
+      end
+      
+      if class ~= "number" and class ~= "nil" then
+        result = result .. " = "
+      end
 
-        if class ~= "number" then
-            result = result .. " = "
-        end
+      result = result .. aux.transform_value(v) .. ', '
+    end
 
-        result = result .. aux.transform_value(value) .. ', '
-
-        if result:sub(result:len() - 1, result:len()) == ", " then
-            result = result:sub(1, result:len() - 2)
-        end
+    if result:sub(result:len() - 1, result:len()) == ", " then
+        result = result:sub(1, result:len() - 2)
     end
 
     return result .. " }"

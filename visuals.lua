@@ -50,7 +50,7 @@ base.BackgroundTransparency = 1 -- No white background when closing
 aux.apply_highlight(close, Color3.fromRGB(200, 0, 0), Color3.fromRGB(200, 100, 100))
 
 local titles = {
-    SearchUpvalues = "Search Upvalues",
+    UpvalueScanner = "Upvalue Scanner",
 }
 
 oh.selected_extension = tabs.Initialized
