@@ -249,7 +249,7 @@ mouse.Button1Up:Connect(function()
 end)
 
 -- Upvalue Polling
-run_service.RenderStepped:Connect(function()
+oh.event_list.poll_upvalues = run_service.RenderStepped:Connect(function()
     if poll then
         for i,upvalues in next, functions do
             upvalues.update()

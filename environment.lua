@@ -37,6 +37,8 @@ oh.icons = {
     userdata = "rbxassetid://3285664726"
 }
 
+oh.event_list = {}
+
 oh.initialize = function()
     oh.gui.Parent = game:GetService("CoreGui")
     oh.running = true

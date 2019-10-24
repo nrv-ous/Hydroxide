@@ -20,7 +20,7 @@ aux.transform_path = function(path)
     end
     
     for i,v in next, split do
-        if (v:sub(1, 1):match("%W") or v:find("%W")) and not v:find("GetService") then
+        if (v:sub(1, 1):match("%A") or v:find("%W")) and not v:find("GetService") then
             result = result:sub(1, result:len())
             v = "[\"" .. v .. "\"]"
         elseif v:find("GetService") then
@@ -109,83 +109,54 @@ aux.dump_table = function(t)
 end
 
 -- Adds a highlight effect to the specified element
-aux.apply_highlight = function(button, new, down, mouse2, condition)
-    local old_color = button.BackgroundColor3 
-    local new_color = new or Color3.fromRGB((old_color.r * 255) + 30, (old_color.g * 255) + 30, (old_color.b * 255) + 30)
-    local down_color = down or Color3.fromRGB((new_color.r * 255) + 30, (new_color.g * 255) + 30, (new_color.b * 255) + 30)
-    condition = condition or true
+aux.apply_highlight = function(button, settings)
+    local property = (settings and settings.property) or "BackgroundColor3"
+    local condition = (settings and settings.condition) or true
+    local old_color = (settings and settings.property and button[settings.property]) or button.BackgroundColor3
+    local new_color = (settings and settings.new) or Color3.fromRGB((old_color.r * 255) + 30, (old_color.g * 255) + 30, (old_color.b * 255) + 30)
+    local down_color = (settings and settings.down) or Color3.fromRGB((new_color.r * 255) + 30, (new_color.g * 255) + 30, (new_color.b * 255) + 30)
 
     button.MouseEnter:Connect(function()
-        local old_context = env.get_thread_context()
-        env.set_thread_context(6)
-        
         if condition then
-            local animation = tween_service:Create(button, TweenInfo.new(0.10), {BackgroundColor3 = new_color})
+            local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = new_color})
             animation:Play()
         end
-
-        env.set_thread_context(old_context)
     end)
 
     button.MouseLeave:Connect(function()
-        local old_context = env.get_thread_context()
-        env.set_thread_context(6)
-        
         if condition then
-            local animation = tween_service:Create(button, TweenInfo.new(0.10), {BackgroundColor3 = old_color})
+            local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = old_color})
             animation:Play()
         end
-
-        env.set_thread_context(old_context)
     end)
 
-    if not mouse2 then
+    if not (settings and settings.mouse2) then
         button.MouseButton1Down:Connect(function()
-            local old_context = env.get_thread_context()
-            env.set_thread_context(6)
-
             if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {BackgroundColor3 = down_color})
+                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = down_color})
                 animation:Play()
             end
-
-            env.set_thread_context(old_context)
         end)
 
         button.MouseButton1Up:Connect(function()
-            local old_context = env.get_thread_context()
-            env.set_thread_context(6)
-            
             if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {BackgroundColor3 = new_color})
+                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = new_color})
                 animation:Play()
             end
-
-            env.set_thread_context(old_context)
         end)
     else
         button.MouseButton2Down:Connect(function()
-            local old_context = env.get_thread_context()
-            env.set_thread_context(6)
-            
             if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {BackgroundColor3 = down_color})
+                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = down_color})
                 animation:Play()
             end
-            
-            env.set_thread_context(old_context)
         end)
 
         button.MouseButton2Up:Connect(function()
-            local old_context = env.get_thread_context()
-            env.set_thread_context(6)
-            
             if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {BackgroundColor3 = new_color})
+                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = new_color})
                 animation:Play()
             end
-
-            env.set_thread_context(old_context)
         end)
     end
 end

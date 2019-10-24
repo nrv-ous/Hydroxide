@@ -4,7 +4,7 @@ local base = oh.gui.Base
 local drag = base.Drag
 local body = base.Body
 local close = drag.Close
-local extensions = body.Extensions
+local components = body.Components
 local tabs = body.Tabs
 
 local tween_service = game:GetService("TweenService")
@@ -42,14 +42,17 @@ user_input.InputChanged:Connect(function(input)
 	end
 end)
 
-aux.apply_highlight(close, Color3.fromRGB(200, 0, 0), Color3.fromRGB(200, 100, 100))
+aux.apply_highlight(close, {
+	new_color = Color3.fromRGB(200, 0, 0),
+	down_color = Color3.fromRGB(200, 100, 100)
+})
 
 local titles = {
     UpvalueScanner = "Upvalue Scanner",
 }
 
-oh.selected_extension = tabs.Initialized
-for i,v in next, extensions:GetChildren() do
+oh.selected_component = tabs.Initialized
+for i,v in next, components:GetChildren() do
     if v:IsA("TextButton") then
         aux.apply_highlight(v)
 
@@ -57,9 +60,9 @@ for i,v in next, extensions:GetChildren() do
             local tab = tabs[v.Name]
             body.TabsLabel.Text = "  " .. (titles[v.Name] or v.Name)
             
-            oh.selected_extension.Visible = false
+            oh.selected_component.Visible = false
             tab.Visible = true
-            oh.selected_extension = tab
+            oh.selected_component = tab
         end)
     end
 end
