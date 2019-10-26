@@ -116,48 +116,49 @@ aux.apply_highlight = function(button, settings)
     local new_color = (settings and settings.new) or Color3.fromRGB((old_color.r * 255) + 30, (old_color.g * 255) + 30, (old_color.b * 255) + 30)
     local down_color = (settings and settings.down) or Color3.fromRGB((new_color.r * 255) + 30, (new_color.g * 255) + 30, (new_color.b * 255) + 30)
 
-    button.MouseEnter:Connect(function()
+    local new_tween = function()
         if condition then
+            local old_context = env.get_thread_context()
+            env.set_thread_context(6)
+
             local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = new_color})
             animation:Play()
-        end
-    end)
 
+            env.set_thread_context(old_context)
+        end
+    end
+
+    local down_tween = function()
+        if condition then
+            local old_context = env.get_thread_context()
+            env.set_thread_context(6)
+
+            local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = down_color})
+            animation:Play()
+
+            env.set_thread_context(old_context)
+        end
+    end
+
+    button.MouseEnter:Connect(new_tween)
     button.MouseLeave:Connect(function()
         if condition then
+            local old_context = env.get_thread_context()
+            env.set_thread_context(6)
+
             local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = old_color})
             animation:Play()
+
+            env.set_thread_context(old_context)
         end
     end)
 
     if not (settings and settings.mouse2) then
-        button.MouseButton1Down:Connect(function()
-            if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = down_color})
-                animation:Play()
-            end
-        end)
-
-        button.MouseButton1Up:Connect(function()
-            if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = new_color})
-                animation:Play()
-            end
-        end)
+        button.MouseButton1Down:Connect(down_tween)
+        button.MouseButton1Up:Connect(new_tween)
     else
-        button.MouseButton2Down:Connect(function()
-            if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = down_color})
-                animation:Play()
-            end
-        end)
-
-        button.MouseButton2Up:Connect(function()
-            if condition then
-                local animation = tween_service:Create(button, TweenInfo.new(0.10), {[property] = new_color})
-                animation:Play()
-            end
-        end)
+        button.MouseButton2Down:Connect(down_tween)
+        button.MouseButton2Up:Connect(new_tween)
     end
 end
 
