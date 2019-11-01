@@ -14,7 +14,7 @@
                    -- developed by nrv-ous/hush --   
     
     Welcome to Hydroxide, the most superior script development
-     tool as of 10/12/19. Feel free to browse the source code, 
+     tool as of 11/01/2019. Feel free to browse the source code, 
     and make any changes. Hydroxide utilizes a module structure 
     for organization and cleanliness, so my apologies if any of 
                       this is a hassle to edit.
