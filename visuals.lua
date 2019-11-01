@@ -42,19 +42,15 @@ user_input.InputChanged:Connect(function(input)
 	end
 end)
 
-<<<<<<< HEAD
 close.MouseButton1Click:Connect(function()
 	body.Visible = not body.Visible
 end)
 
 base.BackgroundTransparency = 1 -- No white background when closing
-aux.apply_highlight(close, Color3.fromRGB(200, 0, 0), Color3.fromRGB(200, 100, 100))
-=======
 aux.apply_highlight(close, {
-	new_color = Color3.fromRGB(200, 0, 0),
-	down_color = Color3.fromRGB(200, 100, 100)
+        new_color = Color3.fromRGB(200, 0, 0),
+        down_color = Color3.fromRGB(200, 100, 100)
 })
->>>>>>> b58c53ba86efb399073a0c7be1e35f64446d47ce
 
 local titles = {
     UpvalueScanner = "Upvalue Scanner",
