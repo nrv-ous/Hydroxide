@@ -26,13 +26,7 @@ local add_condition = conditions.AddCondition
 local remotes = {
     cache = {},
     hard_ignore = {
-        {"CharacterSoundEvent", {
-            "boolean",
-            "boolean"
-        }},
-        {"CharacterSoundEvent", {
-            "string"
-        }},
+        CharacterSoundEvent = true
     }
 }
 local drop_down = {}
@@ -98,7 +92,7 @@ local make_params = function(remote, parameters)
         env.set_thread_context(old)
     end)
 
-    aux.apply_highlight(params, nil, nil, true)
+    aux.apply_highlight(params, { mouse2 = true })
 end
 
 local to_script = function(remote, parameters)
@@ -192,8 +186,8 @@ drop_down.remote_log = function(remote)
     end)
     events.rconditions = remote_log.Conditions.MouseButton1Click:Connect(function()
         conditions.Visible = true
-        oh.selected_extension.Visible = false
-        oh.selected_extension = conditions
+        oh.selected_component.Visible = false
+        oh.selected_component = conditions
     end)
 
     remote_log.Position = UDim2.new(0, mouse.X + 5, 0, mouse.Y + 5)
@@ -376,8 +370,8 @@ remotes.new = function(remote)
             events.clear = inspect.Clear.MouseButton1Click:Connect(remote_data.clear)
             events.conditions = inspect.Conditions.MouseButton1Click:Connect(function()
                 conditions.Visible = true
-                oh.selected_extension.Visible = false
-                oh.selected_extension = conditions
+                oh.selected_component.Visible = false
+                oh.selected_component = conditions
             end)
         end
 
@@ -391,8 +385,8 @@ remotes.new = function(remote)
         body.TabsLabel.Text = "  RemoteSpy : Inspection"
 
         inspect.Visible = true
-        oh.selected_extension.Visible = false
-        oh.selected_extension = inspect
+        oh.selected_component.Visible = false
+        oh.selected_component = inspect
         remotes.selected = remote
 
         env.set_thread_context(old)
@@ -412,27 +406,6 @@ remotes.new = function(remote)
 end
 
 -- H O O K I N G
-local hard_ignored = function(remote, args)
-    local ignore = false
-
-    for i,ignored in next, remotes.hard_ignore do
-        local remote_name = ignored[1]
-        local ignored_args = ignored[2]
-
-        if remote_name == remote.Name and (#args == #ignored_args) then
-            for k,arg in next, ignored_args do
-                if arg ~= typeof(args[k]) then 
-                    ignore = false
-                    break
-                end
-
-                ignore = true
-            end
-        end
-    end
-
-	return ignore
-end
 
 for remote_index = 1, #hook_to do
     local hook 
@@ -442,7 +415,7 @@ for remote_index = 1, #hook_to do
 
         env.set_thread_context(6)
 
-        if env.check_caller() or hard_ignored(remote, vargs) then
+        if env.check_caller() or remotes.hard_ignore[remote.Name] then
             return hook(remote, ...)
         end
 
@@ -485,7 +458,7 @@ gmt.__namecall = env.new_cclosure(function(obj, ...)
     env.set_thread_context(6)
 
     if is_remote(obj) then
-        if env.check_caller() or hard_ignored(obj, vargs) then
+        if env.check_caller() or remotes.hard_ignore[obj.Name] then
             return nmc(obj, ...)
         end
 
@@ -522,7 +495,11 @@ for i, option in next, options:GetChildren() do
             inspect.Remote.Icon.Image = oh.icons[remotes.selected_option.Name]
         end)
 
-        aux.apply_highlight(option, Color3.fromRGB(40, 40, 40), Color3.fromRGB(40, 40, 40), false, selected_option ~= option)
+        aux.apply_highlight(option, {
+            condition = selected_option ~= option,
+            new_color = Color3.fromRGB(40, 40, 40),
+            down_color = Color3.fromRGB(40, 40, 40),
+        })
     end
 end
 
