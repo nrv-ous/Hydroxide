@@ -36,10 +36,10 @@ local find_upvalues = function(value)
 
     for i,v in next, env.get_gc() do
         if type(v) == "function" and not env.is_x_closure(v) then
-		warn(v)
             results[v] = {}
             for k,x in next, env.get_upvalues(v) do
                 if (type(x) == "string" and x:find(value)) or tostring(x) == tostring(value) then
+		warn(v)
                     table.insert(results[v], k, x)
                 end 
             end
