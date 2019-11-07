@@ -467,7 +467,7 @@ gmt.__namecall = env.new_cclosure(function(obj, ...)
             return nmc(obj, ...)
         end
 
-        local remote_data = namecall:Invoke(obj, vargs)
+        local remote_data = namecall.Invoke(namecall, obj, vargs)
 
         if remote_data.blocked or remote_data.is_blocked(vargs) then
             return nil
