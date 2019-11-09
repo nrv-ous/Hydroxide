@@ -129,7 +129,7 @@ local compare_tables = function(args, params)
 end
 
 local is_remote = function(object)
-    return object:IsA("RemoteEvent") or object:IsA("RemoteFunction") or object:IsA("BindableEvent") or object:IsA("BindableFunction") 
+    return object.ClassName == "RemoteEvent" or object.ClassName == "RemoteFunction" or object.ClassName == "BindableEvent" or object.ClassName == "BindableFunction" 
 end
 
 drop_down.inspect = function(container, remote, parameters)
@@ -185,9 +185,14 @@ drop_down.remote_log = function(remote)
         remote_data.window = nil
     end)
     events.rconditions = remote_log.Conditions.MouseButton1Click:Connect(function()
+        local old_context = env.get_thread_context()
+        env.set_thread_context(6)
+
         conditions.Visible = true
         oh.selected_component.Visible = false
         oh.selected_component = conditions
+
+        env.set_thread_context(old_context)
     end)
 
     remote_log.Position = UDim2.new(0, mouse.X + 5, 0, mouse.Y + 5)
@@ -462,7 +467,7 @@ gmt.__namecall = env.new_cclosure(function(obj, ...)
             return nmc(obj, ...)
         end
 
-        local remote_data = namecall:Invoke(obj, vargs)
+        local remote_data = namecall.Invoke(namecall, obj, vargs)
 
         if remote_data.blocked or remote_data.is_blocked(vargs) then
             return nil
