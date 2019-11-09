@@ -29,7 +29,11 @@ local import = function(toimport)
             ("https://raw.githubusercontent.com/%s/%s"):format(branch, toimport)
         ))()
     else 
-        return game:GetObjects("rbxassetid://" .. toimport)[1]
+        local obj = game:GetObjects("rbxassetid://" .. toimport)[1]
+        if syn and syn.protect_gui then
+            syn.protect_gui(obj)
+        end
+        return obj
     end
 end
 
