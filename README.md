@@ -22,8 +22,6 @@
 ## Script
 ```lua
 loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/master/main.lua"))()
---[[test]]local branch = "Kan18/Hydroxide/recommended-execution-method"
-loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/"..branch.."/main.lua"))(branch)
 ```
 <p align="center">
   This is the recommended way of executing Hydroxide as it will automatically update. This loads the code at <a href="https://github.com/nrv-ous/Hydroxide/blob/master/main.lua">main.lua</a>.
