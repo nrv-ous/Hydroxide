@@ -8,8 +8,8 @@ end
 function IsUserIsHavingThemeFile()
     if isFile('Hydroxide/theme.json') then 
         return true
-    else
-        writefile(
+    elseif readfile('Hydroxide/theme.json') == nil then
+        writefile( -- Will use hexadecimal color value instead of RGB
             'theme.json',
             [[
             {
