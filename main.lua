@@ -2,6 +2,7 @@ loadfile("Hydroxide/init.lua")()
 
 oh.ui = import(4635451696)
 oh.assets = import(4636445983)
+oh.theme = import('theme-engine.lua')
 
 oh.message = import("message_box.lua")
 oh.explorer = import("explorer.lua")
