@@ -12,20 +12,12 @@ function IsUserIsHavingThemeFile()
         writefile(
             'theme.json',
             [[
-                {
-                    "Icon": {
-                        
-                    },
-                    "SyntaxHighlighting": {
-
-                    },
-                    "InterfaceColor": {
-
-                    },  
-                    "Text":{
-
-                    }
-                }
+            {
+                "Icon": {},
+                "SyntaxHighlighting": {},
+                "InterfaceColor": {},
+                "Text": {}
+            }
             ]]
         )
     end
