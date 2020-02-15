@@ -6,7 +6,7 @@ function themeEngine.ParseTheme()
 end
 
 function IsUserIsHavingThemeFile()
-    if isFile('hydroxide/theme.json') then 
+    if isFile('Hydroxide/theme.json') then 
         return true
     else
         writefile(
