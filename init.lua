@@ -13,7 +13,10 @@ local tab_text = {
 }
 
 getgenv().oh = {}
-getgenv().import = function(file)
+getgenv().import = function(file,GithubUsername)
+    if GithubUsername == nil then 
+        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))() 
+    end 
     if type(file) == "number" then
         return game:GetObjects("rbxassetid://" .. file)[1]
     end
@@ -21,7 +24,7 @@ getgenv().import = function(file)
     if from_disk then
         return loadfile("Hydroxide/" .. file)()
     else
-        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))()
+        return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/' ..GithubUsername .. '/Hydroxide/rebirth/' .. file))()
     end
 end
 
