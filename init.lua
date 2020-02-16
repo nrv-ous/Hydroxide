@@ -261,3 +261,5 @@ mouse.Button1Up:Connect(function()
         oh.right_click.exit()
     end
 end)
+
+-- TODO: Make it so that if you hover your mouse at an tool icon for around .65 second it will show you an little box telling u what it is. - Vini
