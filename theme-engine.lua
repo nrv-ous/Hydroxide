@@ -1,25 +1,35 @@
 local HttpService = game:GetService("HttpService")
+
 local themeEngine = {}
 
-function themeEngine.ParseTheme()
-    
-end
-
-function IsUserIsHavingThemeFile()
+function themeEngine.IsUserIsHavingThemeFile()
     if isFile('Hydroxide/theme.json') then 
         return true
-    elseif readfile('Hydroxide/theme.json') == nil then
+    elseif readfile('Hydroxide/theme.json') == '' then -- Hey it's tard proof!
+        writefile( -- Will use hexadecimal color value instead of RGB
+        'theme.json',
+        [[
+{
+    "Icon": {},
+    "SyntaxHighlighting": {},
+    "InterfaceColor": {},
+    "Text": {},
+    "Tweening": {}
+}
+]]
+)    elseif not isFile('Hydroxide/theme.json') then
         writefile( -- Will use hexadecimal color value instead of RGB
             'theme.json',
             [[
-            {
-                "Icon": {},
-                "SyntaxHighlighting": {},
-                "InterfaceColor": {},
-                "Text": {}
-            }
-            ]]
-        )
+{
+    "Icon": {},
+    "SyntaxHighlighting": {},
+    "InterfaceColor": {},
+    "Text": {},
+    "Tweening": {}
+}
+]]
+)
     end
 end
 
