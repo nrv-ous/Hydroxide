@@ -8,7 +8,7 @@
                 ███    ███   ███    ███   
                 ▀████████▀   ▀█▀    ▀█▀    
                       :::[H:Y:D:R:O:X:I:D:E]:::
-                   -- developed by nrv-ous/hush --   
+                   -- developed by nrv-ous/hush and Vini Dalvino --   
 ]]--
 loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/init.lua"))()
 
