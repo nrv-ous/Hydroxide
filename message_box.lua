@@ -1,6 +1,6 @@
 local base = oh.ui.Base
 local message_box = base.MessageBox
-local shadow = base.MessageBoxShadow
+local shadow = base.UsageBlock
 
 local message_body = message_box.Body
 local buttons = message_body.Buttons
