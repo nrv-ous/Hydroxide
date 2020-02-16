@@ -14,17 +14,17 @@ local tab_text = {
 
 getgenv().oh = {}
 getgenv().import = function(file,GithubUsername)
-    if GithubUsername == nil then 
-        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))() 
-    end 
+    if GithubUsername ~= nil then
+        return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/' ..GithubUsername .. '/Hydroxide/rebirth/' .. file))()
+    end
     if type(file) == "number" then
         return game:GetObjects("rbxassetid://" .. file)[1]
     end
-
+    
     if from_disk then
         return loadfile("Hydroxide/" .. file)()
     else
-        return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/' ..GithubUsername .. '/Hydroxide/rebirth/' .. file))()
+        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))()
     end
 end
 
@@ -81,7 +81,7 @@ oh.to_string = function(data)
         local __tostring
         local condition = metatable and __tostring
         local real_data
-        
+
         if metatable then
             __tostring = metatable.__tostring
         end
@@ -236,7 +236,7 @@ oh.execute = function()
             dragging = true
             dragStart = input.Position
             startPos = base.Position
-            
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
