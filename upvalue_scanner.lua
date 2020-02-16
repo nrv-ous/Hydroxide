@@ -24,7 +24,7 @@ local tab = base.Body.Contents.Tabs.UpvalueScanner
 local change_upvalue = base.SetUpvalue
 
 local right_click = oh.ui.RightUpvalueScanner
-local right_click_added = oh.ui.RightAddedUpvalue
+local right_click_added = oh.ui.RightAdded
 
 local main = tab.Main
 local results = main.Results.Clip.Contents
