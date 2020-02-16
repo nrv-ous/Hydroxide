@@ -307,7 +307,7 @@ local new_closure = function(closure)
     object.data = closure
     object.upvalues = {}
     object.new_upvalue = new_upvalue
-    object.name = name
+    object.name = ((name == "" or not name) and tostring(closure)) or name
 
     ui_object.Icon.Image = oh.icons["function"]
     ui_object.Label.Text = object.name
