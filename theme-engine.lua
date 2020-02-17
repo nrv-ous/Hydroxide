@@ -1,13 +1,17 @@
 local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
 
 oh.GuiPart = { -- what gui component I want to theme
     IconComponent = {
-
+        
     },
     TextComponent =  {
 
     },
-    MOTDComponent
+    MOTDComponent,
+    LogoComponent = {
+
+    }
 }
 local themeEngine = {}
 
@@ -19,23 +23,41 @@ function themeEngine.IsUserIsHavingThemeFile()
         'theme.json',
         [[
 {
-    "Icon": {},
-    "SyntaxHighlighting": {},
+    "Icon": {
+        "Table": "rbxassetid://4666594276",
+        "Function": ""
+    },
+    "SyntaxHighlighting": {
+        "number": "",
+        "string": "",
+        "boolean": "" 
+    },
     "InterfaceColor": {},
     "Text": {},
-    "Tweening": {}
+    "Tweening": {},
+    "MOTD": {},
+    "Logo":{}
 }
 ]]
-)    elseif not isFile('Hydroxide/theme.json') then
+)   elseif not isFile('Hydroxide/theme.json') then
         writefile( -- Will use hexadecimal color value instead of RGB
             'theme.json',
             [[
 {
-    "Icon": {},
-    "SyntaxHighlighting": {},
+    "Icon": {
+        "Table": "rbxassetid://4666594276",
+        "Function": ""
+    },
+    "SyntaxHighlighting": {
+        "number": "",
+        "string": "",
+        "boolean": "" 
+    },
     "InterfaceColor": {},
     "Text": {},
-    "Tweening": {}
+    "Tweening": {},
+    "MOTD": {},
+    "Logo":{}
 }
 ]]
 )
