@@ -11,7 +11,6 @@
                    -- developed by nrv-ous/hush and Vini Dalvino --   
 ]]--
 loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/init.lua"))()
-loadfile("Hydroxide/init.lua")()
 
 oh.ui = import(4635451696)
 oh.assets = import(4636445983)
