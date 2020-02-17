@@ -21,7 +21,7 @@ getgenv().import = function(file)
     if from_disk then
         return loadfile("Hydroxide/" .. file)()
     else
-        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))()
+        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth" .. file))()
     end
 end
 
@@ -53,6 +53,7 @@ oh.methods = {
     set_clipboard = setclipboard or (syn and syn.write_clipboard) or false,
     set_constant = debug.setconstant or setconstant or setconst or false,
     set_upvalue = debug.setupvalue or setupvalue or setupval or false,
+    set_readonly = setreadonly or false,
 
     is_l_closure = islclosure or (newcclosure and function(closure) return not newcclosure(closure) end) or false,
     is_x_closure = is_synapse_function or issentinelclosure or is_protosmasher_closure or is_sirhurt_closure or checkclosure or false
@@ -73,15 +74,16 @@ oh.assert = function(required)
 end
 
 oh.to_string = function(data)
-    if type(data) == "table" then
+    if type(data) == "table" or typeof(data) == "userdata" then
         local metatable = oh.methods.get_metatable(data)
         local __tostring
-        local condition = metatable and __tostring
         local real_data
         
         if metatable then
             __tostring = metatable.__tostring
         end
+        
+        local condition = metatable and __tostring
 
         if condition then
             oh.methods.set_readonly(metatable, false)
@@ -100,6 +102,7 @@ oh.to_string = function(data)
         return tostring(data)
     end
 end
+
 
 oh.get_closure = function(info)
 	local gets = getconstants

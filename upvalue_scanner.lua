@@ -702,7 +702,7 @@ end
 
 -- 
 local match_query = function(value, value_type, query)   
-    return ((value_type == "string" or value_type == "Instance") and tostring(value):lower():find(query:lower(), 1, true)) or tostring(value) == tostring(query)
+    return ((value_type == "string" or value_type == "Instance") and tostring(value):lower():find(query:lower(), 1, true)) or oh.to_string(value) == query
 end
 
 -- Main upvalue search function, finds any upvalues that are similar to what you search
