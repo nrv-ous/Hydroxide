@@ -256,6 +256,8 @@ oh.execute = function()
             base.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
+
+    oh.message("ok", "Notice!", "The only working feature as of 2/16/20 is the Upvalue Scanner!")
 end
 
 mouse.Button1Up:Connect(function()
