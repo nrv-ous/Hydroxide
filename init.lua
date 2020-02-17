@@ -264,6 +264,14 @@ oh.execute = function()
     oh.message("ok", "Notice!", "The only working feature as of 2/16/20 is the Upvalue Scanner!")
 end
 
+getgenv.oh.is_file = function(file)
+    if not pcall(readfile,file) then
+        return false
+    else
+        return true
+    end
+end
+
 mouse.Button1Up:Connect(function()
     if oh.right_click then
         oh.right_click.exit()
