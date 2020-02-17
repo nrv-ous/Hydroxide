@@ -21,7 +21,7 @@ getgenv().import = function(file)
     if from_disk then
         return loadfile("Hydroxide/" .. file)()
     else
-        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth" .. file))()
+        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))()
     end
 end
 
