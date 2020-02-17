@@ -12,8 +12,6 @@ local tab_text = {
     ScriptScanner = "Script Scanner"
 }
 
-local from_disk = true
-
 getgenv().oh = {}
 getgenv().import = function(file)
     if type(file) == "number" then
