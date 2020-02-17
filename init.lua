@@ -12,6 +12,8 @@ local tab_text = {
     ScriptScanner = "Script Scanner"
 }
 
+local from_disk = true
+
 getgenv().oh = {}
 getgenv().import = function(file)
     if type(file) == "number" then
@@ -21,7 +23,7 @@ getgenv().import = function(file)
     if from_disk then
         return loadfile("Hydroxide/" .. file)()
     else
-        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth/" .. file))()
+        return loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/nrv-ous/Hydroxide/rebirth" .. file))()
     end
 end
 
@@ -254,8 +256,6 @@ oh.execute = function()
             base.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
-	
-	oh.message("ok", "Notice!", "The only working feature in Hydroxide as of this message (2/15/20), is the Upvalue Scanner!")
 end
 
 mouse.Button1Up:Connect(function()
