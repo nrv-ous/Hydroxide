@@ -15,8 +15,8 @@ oh.GuiPart = { -- what gui component I want to theme
 }
 local themeEngine = {}
 
-function themeEngine.IsUserIsHavingThemeFile()
-    if isFile('Hydroxide/theme.json') then
+function themeEngine.isUserIsHavingThemeFile()
+    if oh.is_file('Hydroxide/theme.json') then
         return true
     elseif readfile('Hydroxide/theme.json') == '' then -- Hey it's tard proof!
         writefile( -- Will use hexadecimal color value instead of RGB
@@ -39,7 +39,7 @@ function themeEngine.IsUserIsHavingThemeFile()
     "Logo":{}
 }
 ]]
-)   elseif not isFile('Hydroxide/theme.json') then
+)   elseif not oh.is_file('Hydroxide/theme.json') then
         writefile( -- Will use hexadecimal color value instead of RGB
             'theme.json',
             [[
@@ -51,13 +51,13 @@ function themeEngine.IsUserIsHavingThemeFile()
     "SyntaxHighlighting": {
         "number": "",
         "string": "",
-        "boolean": "" 
+        "boolean": ""
     },
     "InterfaceColor": {},
     "Text": {},
     "Tweening": {},
     "MOTD": {},
-    "Logo":{}
+    "Logo": {}
 }
 ]]
 )
