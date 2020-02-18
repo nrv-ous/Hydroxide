@@ -1,67 +1,100 @@
-local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
+local http_service  = game:GetService("HttpService")
+local core_gui = game:GetService("CoreGui")
 
-oh.GuiPart = { -- what gui component I want to theme
-    IconComponent = {
-        
-    },
-    TextComponent =  {
+oh.gui_part = { -- what gui component I want to theme
+    icon_component = {
 
     },
-    MOTDComponent,
-    LogoComponent = {
+        text_component =  {
+
+    },
+    motd_component,
+    logo_component = {
 
     }
 }
-local themeEngine = {}
+local theme_engine = {}
 
-function themeEngine.isUserIsHavingThemeFile()
+function theme_engine.is_user_is_having_theme_file()
     if oh.is_file('Hydroxide/theme.json') then
         return true
     elseif readfile('Hydroxide/theme.json') == '' then -- Hey it's tard proof!
         writefile( -- Will use hexadecimal color value instead of RGB
-        'theme.json',
-        [[
+            'theme.json',
+            [[
 {
-    "Icon": {
-        "Table": "rbxassetid://4666594276",
-        "Function": ""
+    "icon": {
+        "table": "rbxassetid://4666594276",
+        "function": ""
     },
-    "SyntaxHighlighting": {
-        "number": "",
-        "string": "",
-        "boolean": "" 
+    "syntax_highlighting": {
+        "defaultsyntax": {
+            "R": 200,
+            "G": 200,
+            "B": 200
+        },
+        "number": {
+            "R": 170,
+            "G": 225,
+            "B": 85
+        },
+        "string": {
+            "R": 225,
+            "G": 150,
+            "B": 85
+        },
+        "boolean": {
+            "R": 127,
+            "G": 200,
+            "B": 255
+        }
     },
-    "InterfaceColor": {},
-    "Text": {},
-    "Tweening": {},
-    "MOTD": {},
-    "Logo":{}
-}
-]]
-)   elseif not oh.is_file('Hydroxide/theme.json') then
+    "interface_color": {},
+    " text": {},
+    "tweening": {},
+    "motd": {},
+    "logo":{}
+}]]
+)        
+    elseif not oh.is_file('Hydroxide/theme.json') then
         writefile( -- Will use hexadecimal color value instead of RGB
             'theme.json',
             [[
 {
-    "Icon": {
-        "Table": "rbxassetid://4666594276",
-        "Function": ""
+    "icon": {
+        "table": "rbxassetid://4666594276",
+        "function": ""
     },
-    "SyntaxHighlighting": {
-        "number": "",
-        "string": "",
-        "boolean": ""
+    "syntax_highlighting": {
+        "defaultsyntax": {
+            "R": 200,
+            "G": 200,
+            "B": 200
+        },
+        "number": {
+            "R": 170,
+            "G": 225,
+            "B": 85
+        },
+        "string": {
+            "R": 225,
+            "G": 150,
+            "B": 85
+        },
+        "boolean": {
+            "R": 127,
+            "G": 200,
+            "B": 255
+        }
     },
-    "InterfaceColor": {},
-    "Text": {},
-    "Tweening": {},
-    "MOTD": {},
-    "Logo": {}
-}
-]]
+    "interface_color": {},
+    " text": {},
+    "tweening": {},
+    "motd": {},
+    "logo":{}
+}]]
 )
     end
 end
 
-return themeEngine
+return theme_engine
