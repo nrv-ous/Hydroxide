@@ -1,7 +1,7 @@
 local http_service  = game:GetService("HttpService")
 local core_gui = game:GetService("CoreGui")
 
-oh.gui_part = { -- what gui component I want to theme
+oh.gui_part = { -- what gui component I want to hydroxide_theme
     icon_component = {
 
     },
@@ -16,11 +16,11 @@ oh.gui_part = { -- what gui component I want to theme
 local theme_engine = {}
 
 function theme_engine.is_user_is_having_theme_file()
-    if oh.is_file('Hydroxide/theme.json') then
+    if oh.is_file('hydroxide_theme.json') then
         return true
-    elseif readfile('Hydroxide/theme.json') == '' then -- Hey it's tard proof!
+    elseif readfile('hydroxide_theme.json') == '' then -- Hey it's tard proof!
         writefile( -- Will use hexadecimal color value instead of RGB
-            'theme.json',
+            'hydroxide_theme.json',
             [[
 {
     "icon": {
@@ -56,9 +56,9 @@ function theme_engine.is_user_is_having_theme_file()
     "logo":{}
 }]]
 )        
-    elseif not oh.is_file('Hydroxide/theme.json') then
+    elseif not oh.is_file('hydroxide_theme.json') then
         writefile( -- Will use hexadecimal color value instead of RGB
-            'theme.json',
+            'hydroxide_theme.json',
             [[
 {
     "icon": {
