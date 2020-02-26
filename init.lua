@@ -13,11 +13,14 @@ local tab_text = {
 }
 
 getgenv().oh = {}
-getgenv().import = function(file)
+getgenv().import = function(file,GithubUsername)
+    if GithubUsername ~= nil then
+        return loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/' ..GithubUsername .. '/Hydroxide/rebirth/' .. file))()
+    end
     if type(file) == "number" then
         return game:GetObjects("rbxassetid://" .. file)[1]
     end
-
+    
     if from_disk then
         return loadfile("Hydroxide/" .. file)()
     else
@@ -78,7 +81,7 @@ oh.to_string = function(data)
         local metatable = oh.methods.get_metatable(data)
         local __tostring
         local real_data
-        
+
         if metatable then
             __tostring = metatable.__tostring
         end
@@ -236,7 +239,7 @@ oh.execute = function()
             dragging = true
             dragStart = input.Position
             startPos = base.Position
-            
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -261,8 +264,18 @@ oh.execute = function()
     oh.message("ok", "Notice!", "The only working feature as of 2/16/20 is the Upvalue Scanner!")
 end
 
+getgenv.oh.is_file = function(file)
+    if not pcall(readfile,file) then
+        return false
+    else
+        return true
+    end
+end
+
 mouse.Button1Up:Connect(function()
     if oh.right_click then
         oh.right_click.exit()
     end
 end)
+
+-- TODO: Make it so that if you hover your mouse at an tool icon for around .65 second it will show you an little box telling u what it is. - Vini
